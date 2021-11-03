@@ -8,7 +8,7 @@ void printArray(int* array, int size) {
 	cout << endl;
 }
 
-void printMatrix(int** mat, int width, int height) {
+void printMatrix(int** mat, int height, int width) {
 	for (int i = 0; i < height; i++)
 	{
 		for (int j = 0; j < width; j++)
@@ -85,16 +85,16 @@ int** defineRows(int* heightFrec, int size, int& matrix_size)
 	//calculare valori
 	for (int i = 0; i < size; i++)
 	{
-		if (heightFrec[i] != 0)
+		if (heightFrec[i] != 0 )
 		{
 			int i_start = i;
 			int l = 0;
-			while (heightFrec[i + l] != 0)
-			{
+			do {
 				l++;
-			}
-			i += l;
-			int i_finish = i;
+			} while (heightFrec[i + l] != 0 || heightFrec[i + l + 1] != 0 || heightFrec[i + l + 2] != 0 || heightFrec[i + l + 3] != 0 || heightFrec[i + l + 4] != 0 || heightFrec[i + l + 5] != 0 || heightFrec[i + l + 6] != 0 || heightFrec[i + l + 7] != 0  );
+
+			int i_finish = i+l;
+			i = i_finish;
 
 			int *temp = new int[2]{ i_start,i_finish };
 			matrix[k_matrix++] = temp;
@@ -130,7 +130,7 @@ void drawReactagles(Mat img, int** rectangles, int nrOfRectangles) {
 	for (int i = 0; i < nrOfRectangles; i++)
 	{
 		Rect r = Rect(rectangles[i][0], rectangles[i][1], rectangles[i][3], rectangles[1][2]);
-		cv::rectangle(img, r, Scalar(255, 0, 0), 2);
+		cv::rectangle(img, r, Scalar(255, 0, 0), 1);
 	}
 }
 
@@ -156,4 +156,71 @@ int** define_rectangles(int** width_pairs, int** height_pairs, int size_width_pa
 	}
 
 	return matrix;
+}
+
+int* frecvWithBorder(Mat img, int y0, int y1,int width)
+{
+	int* frecv = new int[width];
+	for (int z = 0; z < width; z++)
+	{
+		frecv[z] = 0;
+	}
+
+	for (int i = 0; i < width; i++)
+	{
+		for (int j = y0; j < y1; j++)
+		{
+			if (img.at<uint8_t>(j, i) == 0)
+			{
+				frecv[i]++;
+			}
+		}
+	}
+	return frecv;
+}
+int** generate_rectangles(Mat img, int** frecv, int size, int width, int height)
+{
+	//matrice rezultat (x,y,width, height);
+	int** matrix = new int* [width * height];
+	int k = 0;
+	for (int i = 0; i < width*height; ++i)
+		matrix[i] = new int[4];
+
+
+
+	//parcurs vector mov
+
+	for (int i = 0; i < size; i++)
+	{
+		int y0 = frecv[i][0];
+		int y1 = frecv[i][1];
+		cout <<"y1-y0"<< y1 - y0 << endl;
+
+		int* frecvBorder = frecvWithBorder(img, y0, y1, width);
+		int exact_size_width_intervals;
+		int** intervale_width = defineRows(frecvBorder, width, exact_size_width_intervals);
+		
+		for (int j = 0; j < exact_size_width_intervals; j++)
+		{
+			int x0 = intervale_width[j][0];
+			int x1 = intervale_width[j][1];
+
+			matrix[k][0] = x0;
+			matrix[k][1] = y0;
+			matrix[k][2] = y1 - y0;
+			matrix[k][3] = x1 - x0;
+			k++;
+		}
+
+
+
+	}
+		//pt fiecare elem, aflat vector frec la dreapta
+
+		//calcul perechi vector frec la dreapta
+
+		//adaugare in matrice rectangles
+		
+	return matrix;
+
 }

@@ -5,7 +5,7 @@ int main() {
 
 	img = imread("Images/test.png");
 	cvtColor(img, rez, COLOR_RGB2GRAY);
-
+	imwrite("Images/ceva.png", rez);
 	int width = rez.size().width;
 	int height = rez.size().height;
 
@@ -15,13 +15,17 @@ int main() {
 
 	int reactangleCoordsRow, reactangleCoordsCol;
 	int** rows_text = defineRows(rowFreq, height, reactangleCoordsRow);
-	int** column_text = defineRows(colFreq, width, reactangleCoordsCol);
+	printMatrix(rows_text, reactangleCoordsRow, 2);
 
-	int** rectangles_ = define_rectangles(rows_text, column_text, reactangleCoordsRow, reactangleCoordsCol);
+	int** rectangles = generate_rectangles(rez,rows_text, reactangleCoordsRow,width, height);
+
+	//int** column_text = defineRows(colFreq, width, reactangleCoordsCol);
+
+	int** rectangles_ = generate_rectangles(rez, rows_text, reactangleCoordsRow, width, height);
 
 	cvtColor(rez, img, COLOR_GRAY2RGB);
 
-	drawReactagles(img, rectangles_, 40);
+	drawReactagles(img, rectangles_, 420);
 
 	imshow("img", img);
 
