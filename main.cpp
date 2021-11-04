@@ -1,33 +1,34 @@
 #include"Header.h"
 
 int main() {
-	Mat img, rez;
+	Mat img, imgGray;
 
-	img = imread("Images/test.png");
-	cvtColor(img, rez, COLOR_RGB2GRAY);
-	imwrite("Images/ceva.png", rez);
-	int width = rez.size().width;
-	int height = rez.size().height;
+	img = imread("Images/ceva1.png");
+	imshow("Inainte", img);
 
-	filterNoise(rez, 50);
-	int* rowFreq = pixelsBlackRows(rez);
-	int* colFreq = pixelsBlackColumns(rez);
+	imgGray = RGB2GRAY(img);
+
+	imshow("InainteGray", imgGray);
+	int width = imgGray.size().width;
+	int height = imgGray.size().height;
+
+	filterNoise(imgGray, 30);
+	int* rowFreq = pixelsBlackRows(imgGray);
+	int* colFreq = pixelsBlackColumns(imgGray);
+
+	imshow("Intermediar2", imgGray);
 
 	int reactangleCoordsRow, reactangleCoordsCol;
 	int** rows_text = defineRows(rowFreq, height, reactangleCoordsRow);
-	printMatrix(rows_text, reactangleCoordsRow, 2);
 
-	int** rectangles = generate_rectangles(rez,rows_text, reactangleCoordsRow,width, height);
+	int** rectangles = generate_rectangles(imgGray, rows_text, reactangleCoordsRow, width, height);
 
-	//int** column_text = defineRows(colFreq, width, reactangleCoordsCol);
-
-	int** rectangles_ = generate_rectangles(rez, rows_text, reactangleCoordsRow, width, height);
-
-	cvtColor(rez, img, COLOR_GRAY2RGB);
+	int** rectangles_ = generate_rectangles(imgGray, rows_text, reactangleCoordsRow, width, height);
 
 	drawReactagles(img, rectangles_, 420);
 
-	imshow("img", img);
+	imshow("Dupa", img);
+
 
 	waitKey(0);
 
