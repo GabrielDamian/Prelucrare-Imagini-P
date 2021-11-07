@@ -8,16 +8,22 @@ using namespace std;
 
 void printArray(int* array, int size);
 void printMatrix(int** mat, int width, int height);
-Mat RGB2GRAY(Mat input);
+
 
 void filterNoise(Mat img, uint8_t threshold);
+int automaticThreshold(Mat img);
 int* pixelsBlackRows(Mat img);
 int* pixelsBlackColumns(Mat img);
 
-int** defineRows(int* heightFrec, int size, int& matrix_size);
-int** define_rectangles(int** width_pairs, int** height_pairs, int size_width_pairs, int size_height_pairs);
-void drawReactagles(Mat img, int** rectangles, int nrOfRectangles);
 
-
-int** generate_rectangles(Mat rez, int** frec, int size, int width, int height);
+int** generate_rectangles(Mat rez);
 int* frecvWithBorder(Mat img, int y0, int y1, int width);
+int** defineRows(int* heightFrec, int size, int& matrix_size);
+int** defineCols(int* heightFrec, int size, int& matrix_size);
+int** define_rectangles(int** width_pairs, int** height_pairs, int size_width_pairs, int size_height_pairs);
+
+
+void drawReactagles(Mat img, int** rectangles, int nrOfRectangles);
+Mat RGB2GRAY(Mat input);
+Mat textDetector(Mat img);
+

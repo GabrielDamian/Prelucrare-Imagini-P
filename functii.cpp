@@ -3,7 +3,7 @@
 void printArray(int* array, int size) {
 	cout << endl;
 	for (int i = 0; i < size; ++i) {
-		cout << array[i] << endl;
+		cout << "array[" <<i<<"]=" << array[i] << endl;
 	}
 	cout << endl;
 }
@@ -19,21 +19,50 @@ void printMatrix(int** mat, int height, int width) {
 	}
 }
 
+int findMostFreqBlack(int* arr, int size) {
+	int val = arr[0];
+	int pos = 0;
+	for (int i = 1; i < size/3; i++) {
+		if (arr[i] > val) {
+			val = arr[i];
+			pos = i;
+		}
+	}
+	return pos;
+}
+
 Mat RGB2GRAY(Mat input) {
 	int width = input.size().width;
 	int height = input.size().height;
 
-	Mat rez(height, width, CV_8UC1, Scalar(0, 0, 0));
+	Mat rez(height, width, CV_8UC1, Scalar(0,0,0));
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			Vec3b pixelRGB = input.at<Vec3b>(i, j);
-			rez.at<uint8_t>(i, j) = 0.299 * pixelRGB[0] + 0.587 * pixelRGB[1] + 0.114 * pixelRGB[2];
+			rez.at<uint8_t>(i, j) =  0.299 * pixelRGB[0] + 0.587 * pixelRGB[1] + 0.114 * pixelRGB[2];
 		}
 	}
 
 	return rez;
 }
+
+int* calculareFrecventa(Mat img) {
+	int width = img.size().width;
+	int height = img.size().height;
+	int* result = new int[255];
+
+	for (int i = 0; i < 255; i++)
+		result[i] = 0;
+
+	for (int i = 0; i < height; i++)
+		for (int j = 0; j < width; j++)
+			result[img.at<uint8_t>(i,j)] ++;
+
+
+	return result;
+}
+
 
 void filterNoise(Mat img, uint8_t threshold) {
 	int width = img.size().width;
@@ -88,7 +117,67 @@ int* pixelsBlackColumns(Mat img) {
 	return v;
 }
 
+int automaticThreshold(Mat img) {
+	int* histogram = calculareFrecventa(img);
+	printArray(histogram, 255);
+	return findMostFreqBlack(histogram,255);
+}
+
 int** defineRows(int* heightFrec, int size, int& matrix_size)
+{
+	//initalizare matrice auxiliara de rezultate
+	int** matrix = new int* [size];
+	for (int i = 0; i < size; ++i)
+		matrix[i] = new int[2];
+	int k_matrix = 0;
+
+	int marime_matrix = 0; // la aflarea marimii reale a matricii rezultat
+
+	//calculare valori
+	for (int i = 0; i < size; i++)
+	{
+		if (heightFrec[i] != 0)
+		{
+			int i_start = i;
+			int l = 0;
+			do {
+				l++;
+			} while (heightFrec[i + l] != 0 || heightFrec[i + l + 1] != 0 || heightFrec[i + l + 2] != 0);
+
+			int i_finish = i + l;
+			i = i_finish;
+
+			int* temp = new int[2]{ i_start,i_finish };
+			matrix[k_matrix++] = temp;
+			marime_matrix++;
+		}
+	}
+
+	//init matrice finala de valori
+	int** final_matrix = new int* [marime_matrix];
+	for (int i = 0; i < marime_matrix; ++i)
+		final_matrix[i] = new int[2];
+
+	//copiere din matricea aux in cea finala
+	for (int i = 0; i < marime_matrix; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			final_matrix[i][j] = matrix[i][j];
+		}
+	}
+	matrix_size = marime_matrix;
+
+	//dealocare matrice aux
+	for (int i = 0; i < size; ++i) {
+		delete[] matrix[i];
+	}
+	delete[] matrix;
+
+	return final_matrix;
+}
+
+int** defineCols(int* heightFrec, int size, int& matrix_size)
 {
 	//initalizare matrice auxiliara de rezultate
 	int** matrix = new int* [size];
@@ -145,7 +234,7 @@ int** defineRows(int* heightFrec, int size, int& matrix_size)
 void drawReactagles(Mat img, int** rectangles, int nrOfRectangles) {
 	for (int i = 0; i < nrOfRectangles; i++)
 	{
-		Rect r = Rect(rectangles[i][0] - 2, rectangles[i][1] - 2, rectangles[i][3] + 4, rectangles[1][2] + 4);
+		Rect r = Rect(rectangles[i][0]-2, rectangles[i][1]-2, rectangles[i][3]+4, rectangles[1][2]+4);
 		cv::rectangle(img, r, Scalar(0, 0, 255), 1);
 	}
 }
@@ -194,8 +283,16 @@ int* frecvWithBorder(Mat img, int y0, int y1, int width)
 	}
 	return frecv;
 }
-int** generate_rectangles(Mat img, int** frecv, int size, int width, int height)
+int** generate_rectangles(Mat img)
 {
+	int width = img.size().width;
+	int height = img.size().height;
+
+	//generare coord y pt text
+	int* rowFreq = pixelsBlackRows(img);
+	int size;
+	int** frecv = defineRows(rowFreq, height, size);
+
 	//matrice rezultat (x,y,width, height);
 	int** matrix = new int* [width * height];
 	int k = 0;
@@ -211,7 +308,7 @@ int** generate_rectangles(Mat img, int** frecv, int size, int width, int height)
 
 		int* frecvBorder = frecvWithBorder(img, y0, y1, width);
 		int exact_size_width_intervals;
-		int** intervale_width = defineRows(frecvBorder, width, exact_size_width_intervals);
+		int** intervale_width = defineCols(frecvBorder, width, exact_size_width_intervals);
 
 		for (int j = 0; j < exact_size_width_intervals; j++)
 		{
@@ -231,4 +328,20 @@ int** generate_rectangles(Mat img, int** frecv, int size, int width, int height)
 
 	return matrix;
 
+}
+
+
+Mat textDetector(Mat original) {
+
+	Mat img=original.clone();
+	Mat imgGray = RGB2GRAY(img);
+
+	//threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
+	filterNoise(imgGray, automaticThreshold(imgGray));
+	imshow("Intermediar", imgGray);
+
+	int** rectangles_ = generate_rectangles(imgGray);
+	drawReactagles(img, rectangles_, 420);
+
+	return img;
 }
