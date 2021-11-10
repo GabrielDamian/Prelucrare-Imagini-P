@@ -119,7 +119,6 @@ int* pixelsBlackColumns(Mat img) {
 
 int automaticThreshold(Mat img) {
 	int* histogram = calculareFrecventa(img);
-	printArray(histogram, 255);
 	return findMostFreqBlack(histogram,255);
 }
 
@@ -283,7 +282,7 @@ int* frecvWithBorder(Mat img, int y0, int y1, int width)
 	}
 	return frecv;
 }
-int** generate_rectangles(Mat img)
+int** generate_rectangles(Mat img, int &OutputNrOfRectagles)
 {
 	int width = img.size().width;
 	int height = img.size().height;
@@ -300,7 +299,7 @@ int** generate_rectangles(Mat img)
 		matrix[i] = new int[4];
 
 	//parcurs vector mov
-
+	int nrOfRectangles=0;
 	for (int i = 0; i < size; i++)
 	{
 		int y0 = frecv[i][0];
@@ -309,7 +308,7 @@ int** generate_rectangles(Mat img)
 		int* frecvBorder = frecvWithBorder(img, y0, y1, width);
 		int exact_size_width_intervals;
 		int** intervale_width = defineCols(frecvBorder, width, exact_size_width_intervals);
-
+		nrOfRectangles += exact_size_width_intervals;
 		for (int j = 0; j < exact_size_width_intervals; j++)
 		{
 			int x0 = intervale_width[j][0];
@@ -322,16 +321,18 @@ int** generate_rectangles(Mat img)
 			k++;
 		}
 
-
+		
 
 	}
+	OutputNrOfRectagles = nrOfRectangles;
+	
 
 	return matrix;
 
 }
 
 
-Mat textDetector(Mat original) {
+void textDetector(Mat original, Mat output) {
 
 	Mat img=original.clone();
 	Mat imgGray = RGB2GRAY(img);
@@ -340,8 +341,60 @@ Mat textDetector(Mat original) {
 	filterNoise(imgGray, automaticThreshold(imgGray));
 	imshow("Intermediar", imgGray);
 
-	int** rectangles_ = generate_rectangles(imgGray);
-	drawReactagles(img, rectangles_, 420);
+	int nrOfReactangles;
+	int** rectangles_ = generate_rectangles(imgGray,nrOfReactangles);
+	drawReactagles(output, rectangles_, nrOfReactangles);
+}
 
-	return img;
+void btnDetector(Mat original, Mat output) {
+	Mat img = original.clone(), imgBlur, imgCanny, imgDil;
+
+	//preprocesare
+	GaussianBlur(img, imgBlur, Size(3, 3), 3, 0);
+	Canny(imgBlur, imgCanny, 25, 75);
+	dilate(imgCanny, imgDil, getStructuringElement(MORPH_RECT, Size(3, 3)));
+
+	//procesare
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(imgDil, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE); //gaseste contururi
+
+	for (int i = 0; i < contours.size(); i++) {
+		vector<vector<Point>> poligoane(contours.size());
+		approxPolyDP(contours[i], poligoane[i], 0.02 * arcLength(contours[i], true), true); //generare poligoane
+
+		if (!(contourArea(contours[i], true) > 500 && poligoane[i].size() == 4)) continue; //eliminare trash
+
+		//coordonate puncte si lungime laturi
+		Point ss = Point(poligoane[i][0].x, poligoane[i][0].y);
+		Point ds = Point(poligoane[i][1].x, poligoane[i][1].y);
+		Point dj = Point(poligoane[i][2].x, poligoane[i][2].y);
+		Point sj = Point(poligoane[i][3].x, poligoane[i][3].y);
+		int lungimeStanga = sj.y - ss.y;
+		int lungimeSus = ds.x - ss.x;
+		int lungimeDreapta = dj.y - ds.y;
+		int lungimeJos = dj.y - ds.y;
+		//verif conditie dreptunghi (laturi egale + paralele)
+		//laturi aprox egale
+		int diferentaLatime = abs(lungimeStanga - lungimeDreapta);
+		int diferentaLungime = abs(lungimeSus - lungimeJos);
+
+		if (diferentaLatime > lungimeDreapta * 0.1 || diferentaLatime > lungimeStanga * 0.1) // diferenta prea mare de latime
+			if (diferentaLungime > lungimeSus * 0.1 || diferentaLungime > lungimeJos * 0.1) continue; //diferenta prea mare de lungime
+
+		//laturi aprox paralele
+		
+		int inclinareaStangii = abs(ss.x - sj.y);
+		int inclinareaDreptei = abs(ds.x - dj.y);
+		int inclinareaSus = abs(ss.y - ds.y);
+		int inclinareaJos = abs(sj.y - dj.y);
+		int trasholdVertical = lungimeDreapta * 0.05;
+		int trasholdOrizontal = lungimeSus * 0.05;
+			if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
+				if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
+					continue;
+		
+
+		drawContours(output, poligoane, i, Scalar(0, 255, 0), 2);
+	}
 }
