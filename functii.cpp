@@ -398,3 +398,23 @@ void btnDetector(Mat original, Mat output) {
 		drawContours(output, poligoane, i, Scalar(0, 255, 0), 2);
 	}
 }
+
+
+Mat generateLegendCustom(int w, int h)
+{
+	Mat img(w, h, CV_8UC3, Scalar(255, 255,255));
+	if (img.empty()) {
+		cout << "Could not load image" << endl;
+	}
+
+	Rect r = Rect(180,20,50,30);
+	rectangle(img, r, Scalar(0, 0, 255), 2);
+	putText(img, "Text", cv::Point(50, 43), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 1, false);
+
+	Rect r_2 = Rect(180, 80, 50, 30);
+	rectangle(img, r_2, Scalar(66, 245, 66), 2);
+	putText(img, "Buton", cv::Point(50, 105), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 1, false);
+
+	//imshow("ceva",img);
+	return img;
+}

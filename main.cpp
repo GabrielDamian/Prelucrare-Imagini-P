@@ -6,9 +6,18 @@ int main() {
 	textDetector(img,rez);
 	btnDetector(img,rez);
 
-	imshow("Inainte", img);
-	imshow("Detectare text", rez);
+	//imshow("Inainte", img);
+	//imshow("Detectare text", rez);
+	Mat legenda = generateLegendCustom(rez.rows,280);
 	
+	//imagine finala (compusa din: rez + legenda)
+	Mat3b final(rez.rows, rez.cols+legenda.cols, Vec3b(0, 0, 0));
+	
+	rez.copyTo(final(Rect(0, 0, rez.cols, rez.rows)));
+	legenda.copyTo(final(Rect(rez.cols,0, legenda.cols, legenda.rows)));
+
+
+	imshow("FINAL", final);
 	waitKey(0);
 	destroyAllWindows();
 

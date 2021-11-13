@@ -28,3 +28,9 @@ Mat RGB2GRAY(Mat input);
 void textDetector(Mat original, Mat output);
 void btnDetector(Mat original, Mat output);
 
+
+//generare legenda
+Mat generateLegendCustom(int w, int h);
+
+
+
