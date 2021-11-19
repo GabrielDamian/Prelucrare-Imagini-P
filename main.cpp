@@ -8,6 +8,7 @@ int main() {
 
 	/*
 	* CEVA
+	* altceva
 	//imshow("Inainte", img);
 	//imshow("Detectare text", rez);
 	Mat legenda = generateLegendCustom(rez.rows,280);
