@@ -7,6 +7,7 @@ int main() {
 	btnDetector(img,rez);
 
 	/*
+	* CEVA
 	//imshow("Inainte", img);
 	//imshow("Detectare text", rez);
 	Mat legenda = generateLegendCustom(rez.rows,280);
