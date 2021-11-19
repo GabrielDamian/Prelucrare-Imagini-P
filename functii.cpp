@@ -418,3 +418,16 @@ Mat generateLegendCustom(int w, int h)
 	//imshow("ceva",img);
 	return img;
 }
+
+
+Mat3b ataseazaLegenda(Mat rez, int width_legenda)
+{
+	//width_leganda = 280
+	Mat legenda = generateLegendCustom(rez.rows, width_legenda);
+	Mat3b final(rez.rows, rez.cols + legenda.cols, Vec3b(0, 0, 0));
+
+	rez.copyTo(final(Rect(0, 0, rez.cols, rez.rows)));
+	legenda.copyTo(final(Rect(rez.cols, 0, legenda.cols, legenda.rows)));
+	
+	return final;
+}

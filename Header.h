@@ -31,6 +31,6 @@ void btnDetector(Mat original, Mat output);
 
 //generare legenda
 Mat generateLegendCustom(int w, int h);
-
+Mat3b ataseazaLegenda(Mat img_rez, int width_legenda);
 
 
