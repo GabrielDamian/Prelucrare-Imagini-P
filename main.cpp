@@ -3,8 +3,9 @@
 int main() {
 	Mat img = imread("Images/test1.png");
 	Mat rez = img.clone();
-	textDetector(img,rez);
+	//text_detector(img,rez);
 	btnDetector(img,rez);
+	detectare_litere(img,rez);
 
 	Mat3b imagine_finala = ataseazaLegenda(rez, 280);
 

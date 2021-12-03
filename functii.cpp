@@ -230,6 +230,60 @@ int** defineCols(int* heightFrec, int size, int& matrix_size)
 	return final_matrix;
 }
 
+int** defineColsLetters(int* heightFrec, int size, int& matrix_size)
+{
+	//initalizare matrice auxiliara de rezultate
+	int** matrix = new int* [size];
+	for (int i = 0; i < size; ++i)
+		matrix[i] = new int[2];
+	int k_matrix = 0;
+
+	int marime_matrix = 0; // la aflarea marimii reale a matricii rezultat
+
+	//calculare valori
+	for (int i = 0; i < size; i++)
+	{
+		if (heightFrec[i] != 0)
+		{
+			int i_start = i;
+			int l = 0;
+			do {
+				l++;
+			} while (heightFrec[i + l] != 0 || heightFrec[i + l + 1] != 0 );
+
+			int i_finish = i + l;
+			i = i_finish;
+
+			int* temp = new int[2]{ i_start,i_finish };
+			matrix[k_matrix++] = temp;
+			marime_matrix++;
+		}
+	}
+
+	//init matrice finala de valori
+	int** final_matrix = new int* [marime_matrix];
+	for (int i = 0; i < marime_matrix; ++i)
+		final_matrix[i] = new int[2];
+
+	//copiere din matricea aux in cea finala
+	for (int i = 0; i < marime_matrix; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			final_matrix[i][j] = matrix[i][j];
+		}
+	}
+	matrix_size = marime_matrix;
+
+	//dealocare matrice aux
+	for (int i = 0; i < size; ++i) {
+		delete[] matrix[i];
+	}
+	delete[] matrix;
+
+	return final_matrix;
+}
+
 void drawReactagles(Mat img, int** rectangles, int nrOfRectangles) {
 	for (int i = 0; i < nrOfRectangles; i++)
 	{
@@ -282,7 +336,7 @@ int* frecvWithBorder(Mat img, int y0, int y1, int width)
 	}
 	return frecv;
 }
-int** generate_rectangles(Mat img, int &OutputNrOfRectagles)
+int** generate_rectangles(Mat img, int &OutputNrOfRectagles, int** (*f)(int* , int , int& ) )
 {
 	int width = img.size().width;
 	int height = img.size().height;
@@ -307,7 +361,7 @@ int** generate_rectangles(Mat img, int &OutputNrOfRectagles)
 
 		int* frecvBorder = frecvWithBorder(img, y0, y1, width);
 		int exact_size_width_intervals;
-		int** intervale_width = defineCols(frecvBorder, width, exact_size_width_intervals);
+		int** intervale_width = f(frecvBorder, width, exact_size_width_intervals);
 		nrOfRectangles += exact_size_width_intervals;
 		for (int j = 0; j < exact_size_width_intervals; j++)
 		{
@@ -332,7 +386,7 @@ int** generate_rectangles(Mat img, int &OutputNrOfRectagles)
 }
 
 
-void textDetector(Mat original, Mat output) {
+void text_detector(Mat original, Mat output) {
 
 	Mat img=original.clone();
 	Mat imgGray = RGB2GRAY(img);
@@ -342,7 +396,7 @@ void textDetector(Mat original, Mat output) {
 	imshow("Intermediar", imgGray);
 
 	int nrOfReactangles;
-	int** rectangles_ = generate_rectangles(imgGray,nrOfReactangles);
+	int** rectangles_ = generate_rectangles(imgGray,nrOfReactangles, defineCols);
 	drawReactagles(output, rectangles_, nrOfReactangles);
 }
 
@@ -430,4 +484,33 @@ Mat3b ataseazaLegenda(Mat rez, int width_legenda)
 	legenda.copyTo(final(Rect(rez.cols, 0, legenda.cols, legenda.rows)));
 	
 	return final;
+}
+
+void detectare_litere(Mat original, Mat output) {
+	Mat img = original.clone();
+	Mat imgGray = RGB2GRAY(img);
+
+	filterNoise(imgGray, automaticThreshold(imgGray));
+	imshow("Intermediar", imgGray);
+
+	int nrOfReactangles;
+	int** rectangles_ = generate_rectangles(imgGray, nrOfReactangles, defineCols);
+
+	/*
+	cout << "img sizes= " << img.size[0] << " " << img.size[1] << endl;
+	for (int i = 0; i < nrOfReactangles; i++) {
+		cout << "box"<<i<< ": " << rectangles_[i][0] << " " << rectangles_[i][1] << " " << rectangles_[i][3] << " " << rectangles_[i][2]<<endl;
+	}*/
+
+	for (int i = 0; i < nrOfReactangles; i++) {
+		cout << i <<"$$$$$$$$$$$$$$$$$$$$$$$$$$"<<endl;
+		//cout << "$$$$$$$$$$$$$$$$$$$$$$$$$ " << rectangles_[i][0] << " " << rectangles_[i][1] << " " << rectangles_[i][3] << " " << rectangles_[i][2];
+		int nrOfLetters;
+		Rect cuvant(rectangles_[i][0], rectangles_[i][1], rectangles_[i][2], rectangles_[i][3]); // x, y, width, height
+		cout << "v" << i<<endl;
+		int** coordonateLitere = generate_rectangles(imgGray(cuvant), nrOfLetters, defineColsLetters);
+		drawReactagles(output, coordonateLitere, nrOfLetters);
+		cout << "$$$$$$$$$$$$$$$4final " << i<<endl;
+	}
+	
 }

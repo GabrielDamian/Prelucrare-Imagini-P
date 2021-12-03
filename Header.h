@@ -20,13 +20,16 @@ int** generate_rectangles(Mat rez,int &OutputNrOfRectangles);
 int* frecvWithBorder(Mat img, int y0, int y1, int width);
 int** defineRows(int* heightFrec, int size, int& matrix_size);
 int** defineCols(int* heightFrec, int size, int& matrix_size);
+int** defineColsLetters(int* heightFrec, int size, int& matrix_size);
 int** define_rectangles(int** width_pairs, int** height_pairs, int size_width_pairs, int size_height_pairs);
 
 
 void drawReactagles(Mat img, int** rectangles, int nrOfRectangles);
 Mat RGB2GRAY(Mat input);
-void textDetector(Mat original, Mat output);
+void text_detector(Mat original, Mat output);
 void btnDetector(Mat original, Mat output);
+void detectare_litere(Mat original, Mat output);
+
 
 
 //generare legenda
