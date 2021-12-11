@@ -10,26 +10,22 @@ void printArray(int* array, int size);
 void printMatrix(int** mat, int width, int height);
 
 
-void filterNoise(Mat img, uint8_t threshold);
+void aplicareThreshold(Mat img, uint8_t threshold);
 int automaticThreshold(Mat img);
-int* pixelsBlackRows(Mat img);
-int* pixelsBlackColumns(Mat img);
+int* blackPixelsOnEachRow(Mat img);
+int* blackPixelsOnEachColumn(Mat img);
+int findMostFreqBlackFromHist(int* arr, int size);
 
 
-int** generate_rectangles(Mat rez,int &OutputNrOfRectangles);
-int* frecvWithBorder(Mat img, int y0, int y1, int width);
-int** defineRows(int* heightFrec, int size, int& matrix_size);
-int** defineCols(int* heightFrec, int size, int& matrix_size);
-int** defineColsLetters(int* heightFrec, int size, int& matrix_size);
-int** define_rectangles(int** width_pairs, int** height_pairs, int size_width_pairs, int size_height_pairs);
-
+int** generateBoxesForText(Mat rez,int &OutputNrOfRectangles);
+int* blackPixelsOnEachColumnWithBorderedRows(Mat img, int y0, int y1, int width);
+int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_size);
+int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_size);
 
 void drawReactagles(Mat img, int** rectangles, int nrOfRectangles);
 Mat RGB2GRAY(Mat input);
 void text_detector(Mat original, Mat output);
 void btnDetector(Mat original, Mat output);
-void detectare_litere(Mat original, Mat output);
-
 
 
 //generare legenda
