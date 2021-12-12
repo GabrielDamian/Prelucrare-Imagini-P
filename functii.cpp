@@ -309,7 +309,7 @@ void characterDetector(Mat original, Mat output) {
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 	int nrOfReactangles;
-	int** _rectangles = generateBoxesForText(imgGray, nrOfReactangles, 6);
+	int** _rectangles = generateBoxesForText(imgGray, nrOfReactangles, 7);
 	//drawReactagles(output, _rectangles, nrOfReactangles);
 
 	//segmentarea cuvintelor
@@ -322,7 +322,14 @@ void characterDetector(Mat original, Mat output) {
 
 		Rect myROI(x, y, w, h);
 		Mat croppedImage = img(myROI);
-		copyMakeBorder(croppedImage, croppedImage, 26, 26, 26, 26, BORDER_CONSTANT, Scalar(255,0,0));
+
+		string name = ".jpg";
+		string concat = "Cropped/" + to_string(i) + name;
+		imwrite(concat, croppedImage);
+
+		croppedImage = imread(concat);
+
+		copyMakeBorder(croppedImage, croppedImage, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));
 		Mat croppedImgGray = RGB2GRAY(croppedImage), croppedImgBinary;
 
 		threshold(croppedImgGray, croppedImgBinary, 0, 255, THRESH_OTSU);
