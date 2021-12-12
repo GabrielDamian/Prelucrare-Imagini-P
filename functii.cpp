@@ -312,35 +312,36 @@ void characterDetector(Mat original, Mat output) {
 	int** _rectangles = generateBoxesForText(imgGray, nrOfReactangles, 7);
 	//drawReactagles(output, _rectangles, nrOfReactangles);
 
-	//segmentarea cuvintelor
+	
 	for (int i = 0; i < nrOfReactangles; ++i) {
+		//segmentarea cuvantului
 		int x = _rectangles[i][0];
 		int y = _rectangles[i][1];
 		int w = _rectangles[i][3];
 		int h = _rectangles[i][2];
-		printf("%d %d \n", i, x);
-
-		Rect myROI(x, y, w, h);
-		Mat croppedImage = img(myROI);
+		Mat croppedImage = img(Rect(x, y, w, h));
 
 		string name = ".jpg";
 		string concat = "Cropped/" + to_string(i) + name;
 		imwrite(concat, croppedImage);
 
 		croppedImage = imread(concat);
-
 		copyMakeBorder(croppedImage, croppedImage, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));
 		Mat croppedImgGray = RGB2GRAY(croppedImage), croppedImgBinary;
-
 		threshold(croppedImgGray, croppedImgBinary, 0, 255, THRESH_OTSU);
 
-		int nrOfLetters;
-		int** letters = generateBoxesForText(croppedImgBinary, nrOfLetters, 1);
+		int nrOfCharacters;
+		int** characters = generateBoxesForText(croppedImgBinary, nrOfCharacters, 1);
 		
-		drawReactagles(croppedImage, letters, nrOfLetters);
-		
-		imshow("cuv", croppedImage);
-		waitKey(0);
+		//segmenarea literei
+		for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
+			int xVerical = characters[characterIndex][0] + ceil((double)characters[characterIndex][3] / 2);
+			int y0Horizontal = characters[characterIndex][1] + characters[characterIndex][2] / 4;
+			int y1Horizontal = characters[characterIndex][1] + characters[characterIndex][2] / 2;
+			int y2Horizontal = characters[characterIndex][1] + characters[characterIndex][2] * (3/4);
+
+
+		}
 	}
 }
 

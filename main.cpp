@@ -7,9 +7,9 @@ int main() {
 	btnDetector(img,rez);
 	characterDetector(img,rez);
 
-	Mat3b imagine_finala = ataseazaLegenda(rez, 280);
+	//Mat3b imagine_finala = ataseazaLegenda(rez, 280);
 
-	imshow("FINAL", imagine_finala);
+	imshow("FINAL", rez);
 	waitKey(0);
 	destroyAllWindows();
 
