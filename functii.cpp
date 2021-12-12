@@ -3,7 +3,7 @@
 void printArray(int* array, int size) {
 	cout << endl;
 	for (int i = 0; i < size; ++i) {
-		cout << "array[" <<i<<"]=" << array[i] << endl;
+		cout << "array[" << i << "]=" << array[i] << endl;
 	}
 	cout << endl;
 }
@@ -18,6 +18,9 @@ void printMatrix(int** mat, int height, int width) {
 		cout << endl;
 	}
 }
+
+// TEXT
+
 
 int findMostFreqBlackFromHist(int* arr, int size) {
 	//Merg pana la size/3 pentru ca in acel range sunt culorile de negru
@@ -167,7 +170,7 @@ int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSi
 	return finalMatrix;
 }
 
-int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_size)
+int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_size, int verificari = 6)
 {
 	//initalizare matrice auxiliara de rezultate
 	int** matrix = new int* [size];
@@ -183,9 +186,16 @@ int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_si
 		{
 			int i_start = i;
 			int l = 0;
+			bool verificare = 0;
 			do {
 				l++;
-			} while (heightFrec[i + l] != 0 || heightFrec[i + l + 1] != 0 || heightFrec[i + l + 2] != 0 || heightFrec[i + l + 3] != 0 || heightFrec[i + l + 4] != 0 || heightFrec[i + l + 5] != 0 || heightFrec[i + l + 6] != 0 || heightFrec[i + l + 7] != 0);
+				verificare = 0;
+				
+				for (int j = 0; j < verificari; ++j) {
+					verificare = verificare || heightFrec[i + l + j]; // daca macar una e adv e bine
+				}
+				
+			} while (verificare);
 
 			int i_finish = i + l;
 			i = i_finish;
@@ -223,7 +233,8 @@ int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_si
 void drawReactagles(Mat img, int** rectangles, int nrOfRectangles) {
 	for (int i = 0; i < nrOfRectangles; ++i)
 	{
-		Rect r = Rect(rectangles[i][0]-2, rectangles[i][1]-2, rectangles[i][3]+4, rectangles[1][2]+4);
+		//Rect r = Rect(rectangles[i][0]-2, rectangles[i][1]-2, rectangles[i][3]+4, rectangles[1][2]+4);
+		Rect r = Rect(rectangles[i][0], rectangles[i][1], rectangles[i][3], rectangles[1][2]);
 		cv::rectangle(img, r, Scalar(0, 0, 255), 1);
 	}
 }
@@ -249,7 +260,7 @@ int* blackPixelsOnEachColumnWithBorderedRows(Mat img, int y0, int y1, int width)
 	return frecv;
 }
 
-int** generateBoxesForText(Mat img, int &OutputNrOfRectagles)
+int** generateBoxesForText(Mat img, int &OutputNrOfRectagles, int pixelsBetweenBoxes = 6)
 {
 	int width = img.size().width;
 	int height = img.size().height;
@@ -274,7 +285,7 @@ int** generateBoxesForText(Mat img, int &OutputNrOfRectagles)
 
 		int* frecvBorder = blackPixelsOnEachColumnWithBorderedRows(img, y0, y1, width);
 		int exact_size_width_intervals;
-		int** intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, exact_size_width_intervals);
+		int** intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, exact_size_width_intervals, pixelsBetweenBoxes);
 		nrOfRectangles += exact_size_width_intervals;
 		for (int j = 0; j < exact_size_width_intervals; ++j)
 		{
@@ -292,12 +303,46 @@ int** generateBoxesForText(Mat img, int &OutputNrOfRectagles)
 	return matrix;
 }
 
-void text_detector(Mat original, Mat output) {
+void characterDetector(Mat original, Mat output) {
+	Mat img = original.clone();
+	Mat imgGray = RGB2GRAY(img);
+
+	aplicareThreshold(imgGray, automaticThreshold(imgGray));
+	int nrOfReactangles;
+	int** _rectangles = generateBoxesForText(imgGray, nrOfReactangles, 6);
+	//drawReactagles(output, _rectangles, nrOfReactangles);
+
+	//segmentarea cuvintelor
+	for (int i = 0; i < nrOfReactangles; ++i) {
+		int x = _rectangles[i][0];
+		int y = _rectangles[i][1];
+		int w = _rectangles[i][3];
+		int h = _rectangles[i][2];
+		printf("%d %d \n", i, x);
+
+		Rect myROI(x, y, w, h);
+		Mat croppedImage = img(myROI);
+		copyMakeBorder(croppedImage, croppedImage, 26, 26, 26, 26, BORDER_CONSTANT, Scalar(255,0,0));
+		Mat croppedImgGray = RGB2GRAY(croppedImage), croppedImgBinary;
+
+		threshold(croppedImgGray, croppedImgBinary, 0, 255, THRESH_OTSU);
+
+		int nrOfLetters;
+		int** letters = generateBoxesForText(croppedImgBinary, nrOfLetters, 1);
+		
+		drawReactagles(croppedImage, letters, nrOfLetters);
+		
+		imshow("cuv", croppedImage);
+		waitKey(0);
+	}
+}
+
+void textDetector(Mat original, Mat output) {
 
 	Mat img=original.clone();
 	Mat imgGray = RGB2GRAY(img);
 
-	//threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
+	//threshold(imgGray, imgGray, 0, 255, THRESH_BINARY + THRESH_OTSU);
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 	imshow("Intermediar", imgGray);
 
@@ -353,7 +398,6 @@ void btnDetector(Mat original, Mat output) {
 			if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
 				if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
 					continue;
-
 		drawContours(output, poligoane, i, Scalar(0, 255, 0), 2);
 	}
 }
