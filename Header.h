@@ -7,9 +7,21 @@
 using namespace cv;
 using namespace std;
 
-void printArray(int* array, int size);
-void printMatrix(int** mat, int width, int height);
+struct Character {
+	char ch;
+	int fr[8] = { 0 };
+	Character(const char ch, int valori[], int marime = 8) {
+		this->ch = ch;
+		for (int i = 0; i < marime; ++i) {
+			this->fr[i] = valori[i];
+		}
+	}
+};
 
+template<typename T>
+void printArray(T* array, int size);
+void printMatrix(int** mat, int width, int height);
+void calculateCharacterValues(Mat);
 
 void aplicareThreshold(Mat img, uint8_t threshold);
 int automaticThreshold(Mat img);
@@ -30,5 +42,3 @@ void characterDetector(Mat original, Mat output);
 
 Mat generateLegendCustom(int w, int h);
 Mat3b ataseazaLegenda(Mat img_rez, int width_legenda);
-
-

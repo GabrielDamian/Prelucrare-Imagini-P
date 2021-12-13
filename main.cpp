@@ -1,11 +1,12 @@
 #include"Header.h"
 
 int main() {
-	Mat img = imread("Images/test1.png");
+	Mat img = imread("Images/unicode.png");
 	Mat rez = img.clone();
 	//textDetector(img,rez);
-	btnDetector(img,rez);
-	characterDetector(img,rez);
+	//btnDetector(img,rez);
+	//characterDetector(img,rez);
+	//calculateCharacterValues(img);
 
 	//Mat3b imagine_finala = ataseazaLegenda(rez, 280);
 

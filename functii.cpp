@@ -1,11 +1,15 @@
 #include"Header.h"
 
-void printArray(int* array, int size) {
-	cout << endl;
+template <typename T>
+void printArray(T* array, int size) {
+	FILE* f;
+	fopen_s(&f, "coduri_caractere.txt", "a");
+	fprintf(f,"Array : ");
 	for (int i = 0; i < size; ++i) {
-		cout << "array[" << i << "]=" << array[i] << endl;
+		fprintf(f,"%d ",array[i]);
 	}
-	cout << endl;
+	fprintf(f,"\n");
+	fclose(f);
 }
 
 void printMatrix(int** mat, int height, int width) {
@@ -309,39 +313,161 @@ void characterDetector(Mat original, Mat output) {
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 	int nrOfReactangles;
-	int** _rectangles = generateBoxesForText(imgGray, nrOfReactangles, 7);
-	//drawReactagles(output, _rectangles, nrOfReactangles);
-
+	int** words = generateBoxesForText(imgGray, nrOfReactangles, 7);
 	
-	for (int i = 0; i < nrOfReactangles; ++i) {
+	for (int wordIndex = 0; wordIndex < nrOfReactangles; ++wordIndex) {
 		//segmentarea cuvantului
-		int x = _rectangles[i][0];
-		int y = _rectangles[i][1];
-		int w = _rectangles[i][3];
-		int h = _rectangles[i][2];
-		Mat croppedImage = img(Rect(x, y, w, h));
+		int x = words[wordIndex][0];
+		int y = words[wordIndex][1];
+		int w = words[wordIndex][3];
+		int h = words[wordIndex][2];
+		Mat wordImage = img(Rect(x, y, w, h));
 
-		string name = ".jpg";
-		string concat = "Cropped/" + to_string(i) + name;
-		imwrite(concat, croppedImage);
+		string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
+		imwrite(concat, wordImage);
+		wordImage = imread(concat);
 
-		croppedImage = imread(concat);
-		copyMakeBorder(croppedImage, croppedImage, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));
-		Mat croppedImgGray = RGB2GRAY(croppedImage), croppedImgBinary;
-		threshold(croppedImgGray, croppedImgBinary, 0, 255, THRESH_OTSU);
+		copyMakeBorder(wordImage, wordImage, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));
+		Mat wordImageBinary;
+		threshold(RGB2GRAY(wordImage), wordImageBinary, 0, 255, THRESH_OTSU);
 
 		int nrOfCharacters;
-		int** characters = generateBoxesForText(croppedImgBinary, nrOfCharacters, 1);
-		
+		int** characters = generateBoxesForText(wordImageBinary, nrOfCharacters, 1);
+
 		//segmenarea literei
 		for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
-			int xVerical = characters[characterIndex][0] + ceil((double)characters[characterIndex][3] / 2);
-			int y0Horizontal = characters[characterIndex][1] + characters[characterIndex][2] / 4;
-			int y1Horizontal = characters[characterIndex][1] + characters[characterIndex][2] / 2;
-			int y2Horizontal = characters[characterIndex][1] + characters[characterIndex][2] * (3/4);
+			int xCharacter = characters[characterIndex][0];
+			int yCharacter = characters[characterIndex][1];
+			int wCharacter = characters[characterIndex][3];
+			int hCharacter = characters[characterIndex][2];
+			int xVerical = xCharacter + ceil((double)wCharacter / 2);
+			int y0Horizontal = yCharacter + hCharacter / 4;
+			int y1Horizontal = yCharacter + hCharacter / 2;
+			int y2Horizontal = yCharacter + hCharacter * (3/4);
 
+			uint* sectionValues = new uint[8]{ 0,0,0,0,0,0,0,0 };
+			/* parcugerea celor 8 zone din fiecare caracter
+			     0    |		1
+			----------|---------- y0Horizontal
+				 2    |		3
+			----------|---------- y1Horizontal
+				 4	  |		5
+			----------|---------- y2Horizontal
+				 6	  |		7
+				 xVeritical	
+			*/
+			for (int rowIndexPixel = yCharacter; rowIndexPixel < yCharacter + hCharacter - 1; ++rowIndexPixel) {
+				for (int columnIndexPixel = xCharacter; columnIndexPixel < xCharacter + wCharacter - 1; ++columnIndexPixel) {
+					uint8_t pixel = wordImageBinary.at<uint8_t>(rowIndexPixel, columnIndexPixel);
+					if (pixel == 0) {
+						if (columnIndexPixel <= xVerical && rowIndexPixel < y0Horizontal) {  // 0
+							sectionValues[0]++;
+						}
+						else if (columnIndexPixel > xVerical && rowIndexPixel < y0Horizontal) {  // 1
+							sectionValues[1]++;
+						}
+						else if (columnIndexPixel <= xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 2
+							sectionValues[2]++;
+						}
+						else if (columnIndexPixel > xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 3
+							sectionValues[3]++;
+						}
+						else if (columnIndexPixel <= xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 4
+							sectionValues[4]++;
+						}
+						else if (columnIndexPixel > xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 5
+							sectionValues[5]++;
+						}
+						else if (columnIndexPixel <= xVerical && rowIndexPixel >= y2Horizontal) {  // 6
+							sectionValues[6]++;
+						}
+						else if (columnIndexPixel > xVerical && rowIndexPixel >= y2Horizontal) {
+							sectionValues[7]++;
+						}
+					}
+				}
+			}
 
+			printArray(sectionValues, 8);
+			printf("\nx=%d y=%d w=%d h=%d", xCharacter, yCharacter, wCharacter, hCharacter);
+			printf("\nv=%d o1=%d o2=%d o3=%d\n", xVerical, y0Horizontal, y1Horizontal, y2Horizontal);
+			imshow("Char", wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
+			waitKey(0);
 		}
+	}
+}
+
+void calculateCharacterValues(Mat img) {
+	Mat imgGray = RGB2GRAY(img);
+
+	threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
+	int nrOfCharacters;
+	int** characters = generateBoxesForText(imgGray, nrOfCharacters, 7);
+
+	drawReactagles(img, characters, nrOfCharacters);
+	cv::imshow("all", img);
+
+	//segmenarea literei
+	for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
+		int xCharacter = characters[characterIndex][0];
+		int yCharacter = characters[characterIndex][1];
+		int wCharacter = characters[characterIndex][3];
+		int hCharacter = characters[characterIndex][2];
+		int xVerical = xCharacter + ceil((double)wCharacter / 2);
+		int y0Horizontal = yCharacter + hCharacter / 4;
+		int y1Horizontal = yCharacter + hCharacter / 2;
+		int y2Horizontal = yCharacter + hCharacter * (3 / 4);
+
+		uint* sectionValues = new uint[8]{ 0,0,0,0,0,0,0,0 };
+		/* parcugerea celor 8 zone din fiecare caracter
+			 0    |		1
+		----------|---------- y0Horizontal
+			 2    |		3
+		----------|---------- y1Horizontal
+			 4	  |		5
+		----------|---------- y2Horizontal
+			 6	  |		7
+			 xVeritical
+		*/
+		for (int rowIndexPixel = yCharacter; rowIndexPixel < yCharacter + hCharacter; ++rowIndexPixel) {
+			for (int columnIndexPixel = xCharacter; columnIndexPixel < xCharacter + wCharacter; ++columnIndexPixel) {
+				uint8_t pixel = imgGray.at<uint8_t>(rowIndexPixel, columnIndexPixel);
+				if (pixel == 0) {
+					if (columnIndexPixel <= xVerical && rowIndexPixel < y0Horizontal) {  // 0
+						sectionValues[0]++;
+					}
+					else if (columnIndexPixel > xVerical && rowIndexPixel < y0Horizontal) {  // 1
+						sectionValues[1]++;
+					}
+					else if (columnIndexPixel <= xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 2
+						sectionValues[2]++;
+					}
+					else if (columnIndexPixel > xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 3
+						sectionValues[3]++;
+					}
+					else if (columnIndexPixel <= xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 4
+						sectionValues[4]++;
+					}
+					else if (columnIndexPixel > xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 5
+						sectionValues[5]++;
+					}
+					else if (columnIndexPixel <= xVerical && rowIndexPixel >= y2Horizontal) {  // 6
+						sectionValues[6]++;
+					}
+					else if (columnIndexPixel > xVerical && rowIndexPixel >= y2Horizontal) {
+						sectionValues[7]++;
+					}
+				}
+			}
+		}
+
+		printArray(sectionValues, 8);
+		printf("\nx=%d y=%d w=%d h=%d", xCharacter, yCharacter, wCharacter, hCharacter);
+		printf("\nv=%d o1=%d o2=%d o3=%d\n", xVerical, y0Horizontal, y1Horizontal, y2Horizontal);
+		string nume = "char" + to_string(characterIndex);
+		imshow(nume, imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
+		//waitKey(0);
+		//destroyAllWindows();
 	}
 }
 
