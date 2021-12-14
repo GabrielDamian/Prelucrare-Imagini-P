@@ -1,15 +1,12 @@
 #include"Header.h"
-
+#include "Caractere.h"
 template <typename T>
 void printArray(T* array, int size) {
-	FILE* f;
-	fopen_s(&f, "coduri_caractere.txt", "a");
-	fprintf(f,"Array : ");
+	printf("\nArray : ");
 	for (int i = 0; i < size; ++i) {
-		fprintf(f,"%d ",array[i]);
+		cout << array[i] << " ";
 	}
-	fprintf(f,"\n");
-	fclose(f);
+	printf("\n");
 }
 
 void printMatrix(int** mat, int height, int width) {
@@ -23,8 +20,26 @@ void printMatrix(int** mat, int height, int width) {
 	}
 }
 
-// TEXT
+int similarityIndex(int* sectionValues1,int* sectionValues2,int size = 8) {
+	int sum = 0;
+	for (int i = 0; i < size; ++i) {
+		sum += abs(sectionValues1[i] - sectionValues2[i]);
+	}
+	return sum;
+}
 
+char getCharacterBySectionValues(int* values, int size=8) {
+	char resultedCharacter = characters[0].ch;
+	int min = similarityIndex(values,characters[0].fr);
+	for (int i = 1; i < 63; ++i) {
+		int similarity = similarityIndex(values, characters[i].fr);
+		if (similarity < min) {
+			min = similarity;
+			resultedCharacter = characters[i].ch;
+		}
+	}
+	return resultedCharacter;
+}
 
 int findMostFreqBlackFromHist(int* arr, int size) {
 	//Merg pana la size/3 pentru ca in acel range sunt culorile de negru
@@ -345,7 +360,7 @@ void characterDetector(Mat original, Mat output) {
 			int y1Horizontal = yCharacter + hCharacter / 2;
 			int y2Horizontal = yCharacter + hCharacter * (3/4);
 
-			uint* sectionValues = new uint[8]{ 0,0,0,0,0,0,0,0 };
+			int* sectionValues = new int[8]{ 0,0,0,0,0,0,0,0 };
 			/* parcugerea celor 8 zone din fiecare caracter
 			     0    |		1
 			----------|---------- y0Horizontal
@@ -388,11 +403,12 @@ void characterDetector(Mat original, Mat output) {
 				}
 			}
 
-			printArray(sectionValues, 8);
-			printf("\nx=%d y=%d w=%d h=%d", xCharacter, yCharacter, wCharacter, hCharacter);
-			printf("\nv=%d o1=%d o2=%d o3=%d\n", xVerical, y0Horizontal, y1Horizontal, y2Horizontal);
-			imshow("Char", wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
+			
+			cout << "%%%%%%%% " << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$" << endl;
+			string nume = "char" + to_string(characterIndex);
+			imshow(nume, wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
 			waitKey(0);
+			destroyAllWindows();
 		}
 	}
 }
@@ -406,7 +422,6 @@ void calculateCharacterValues(Mat img) {
 
 	drawReactagles(img, characters, nrOfCharacters);
 	cv::imshow("all", img);
-
 	//segmenarea literei
 	for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
 		int xCharacter = characters[characterIndex][0];
@@ -418,7 +433,7 @@ void calculateCharacterValues(Mat img) {
 		int y1Horizontal = yCharacter + hCharacter / 2;
 		int y2Horizontal = yCharacter + hCharacter * (3 / 4);
 
-		uint* sectionValues = new uint[8]{ 0,0,0,0,0,0,0,0 };
+		int* sectionValues = new int[8]{ 0,0,0,0,0,0,0,0 };
 		/* parcugerea celor 8 zone din fiecare caracter
 			 0    |		1
 		----------|---------- y0Horizontal
@@ -454,20 +469,21 @@ void calculateCharacterValues(Mat img) {
 					else if (columnIndexPixel <= xVerical && rowIndexPixel >= y2Horizontal) {  // 6
 						sectionValues[6]++;
 					}
-					else if (columnIndexPixel > xVerical && rowIndexPixel >= y2Horizontal) {
+					else if (columnIndexPixel > xVerical && rowIndexPixel >= y2Horizontal) {  // 7
 						sectionValues[7]++;
 					}
 				}
 			}
 		}
-
+		cout << "%%%%%%%% " << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$" << endl;
+		/*
 		printArray(sectionValues, 8);
 		printf("\nx=%d y=%d w=%d h=%d", xCharacter, yCharacter, wCharacter, hCharacter);
-		printf("\nv=%d o1=%d o2=%d o3=%d\n", xVerical, y0Horizontal, y1Horizontal, y2Horizontal);
+		printf("\nv=%d o1=%d o2=%d o3=%d\n", xVerical, y0Horizontal, y1Horizontal, y2Horizontal);*/
 		string nume = "char" + to_string(characterIndex);
 		imshow(nume, imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
-		//waitKey(0);
-		//destroyAllWindows();
+		waitKey(0);
+		destroyAllWindows();
 	}
 }
 

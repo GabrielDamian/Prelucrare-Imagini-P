@@ -146,7 +146,7 @@
     <ClCompile Include="functii.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Caractere.cpp" />
+    <ClInclude Include="Caractere.h" />
     <ClInclude Include="Header.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

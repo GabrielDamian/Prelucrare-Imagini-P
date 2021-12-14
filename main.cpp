@@ -1,11 +1,11 @@
 #include"Header.h"
 
 int main() {
-	Mat img = imread("Images/unicode.png");
+	Mat img = imread("Images/test1.png");
 	Mat rez = img.clone();
 	//textDetector(img,rez);
 	//btnDetector(img,rez);
-	//characterDetector(img,rez);
+	characterDetector(img,rez);
 	//calculateCharacterValues(img);
 
 	//Mat3b imagine_finala = ataseazaLegenda(rez, 280);
@@ -13,6 +13,4 @@ int main() {
 	imshow("FINAL", rez);
 	waitKey(0);
 	destroyAllWindows();
-
-	return 0;
 }

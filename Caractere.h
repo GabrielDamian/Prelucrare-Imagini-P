@@ -1,5 +1,3 @@
-#include"Header.h"
-
 int vec_0[] = { 4, 0, 5, 0, 0, 0, 2, 0 };
 int vec_1[] = { 2, 2, 2, 1, 0, 0, 0, 0 };
 int vec_2[] = { 2, 3, 10, 3, 0, 0, 12, 1 };
@@ -93,4 +91,45 @@ int vec_89[] = { 2, 1, 4, 0, 0, 0, 7, 1 };
 int vec_90[] = { 3, 0, 3, 0, 0, 0, 7, 0 };
 int vec_91[] = { 4, 0, 4, 0, 0, 0, 7, 1 };
 int vec_92[] = { 0, 0, 3, 1, 0, 0, 2, 2 };
-Character* caractere = new Character[]{ Character('!', vec_0), Character('"', vec_1), Character('#', vec_2), Character('$', vec_3), Character('%', vec_4), Character('&', vec_5), Character('\'', vec_6), Character('(', vec_7), Character(')', vec_8), Character(' * ', vec_9), Character(' + ', vec_10), Character(',', vec_11), Character(' - ', vec_12), Character('.', vec_13), Character('0', vec_14), Character('1', vec_15), Character('2', vec_16), Character('3', vec_17), Character('4', vec_18), Character('5', vec_19), Character('6', vec_20), Character('7', vec_21), Character('8', vec_22), Character('9', vec_23), Character(':', vec_24), Character('; ', vec_25), Character(' < ', vec_26), Character(' = ', vec_27), Character(' > ', vec_28), Character(' ? ', vec_29), Character('@', vec_30), Character('A', vec_31), Character('B', vec_32), Character('C', vec_33), Character('D', vec_34), Character('E', vec_35), Character('F', vec_36), Character('G', vec_37), Character('H', vec_38), Character('I', vec_39), Character('J', vec_40), Character('K', vec_41), Character('L', vec_42), Character('M', vec_43), Character('N', vec_44), Character('O', vec_45), Character('P', vec_46), Character('Q', vec_47), Character('R', vec_48), Character('S', vec_49), Character('T', vec_50), Character('U', vec_51), Character('V', vec_52), Character('W', vec_53), Character('X', vec_54), Character('Y', vec_55), Character('Z', vec_56), Character('[', vec_57), Character('\\', vec_58), Character(']', vec_59), Character(' ^ ', vec_60), Character('_', vec_61), Character('`', vec_62), Character('a', vec_63), Character('b', vec_64), Character('c', vec_65), Character('d', vec_66), Character('e', vec_67), Character('f', vec_68), Character('g', vec_69), Character('h', vec_70), Character('i', vec_71), Character('j', vec_72), Character('k', vec_73), Character('l', vec_74), Character('m', vec_75), Character('n', vec_76), Character('o', vec_77), Character('p', vec_78), Character('q', vec_79), Character('r', vec_80), Character('s', vec_81), Character('t', vec_82), Character('u', vec_83), Character('v', vec_84), Character('w', vec_85), Character('x', vec_86), Character('y', vec_87), Character('z', vec_88), Character('{', vec_89), Character('|', vec_90), Character('}', vec_91), Character('~', vec_92) };
+
+/*
+Character* characters = new Character[]{ Character('!', vec_0), Character('"', vec_1), Character('#', vec_2),
+Character('$', vec_3), Character('%', vec_4), Character('&', vec_5), Character('\'', vec_6), Character('(', vec_7), Character(')', vec_8),
+Character('*', vec_9), Character('+', vec_10), Character(',', vec_11), Character('-', vec_12),
+Character('.', vec_13), Character('0', vec_14), Character('1', vec_15), Character('2', vec_16),
+Character('3', vec_17), Character('4', vec_18), Character('5', vec_19), Character('6', vec_20),
+Character('7', vec_21), Character('8', vec_22), Character('9', vec_23), Character(':', vec_24),
+Character(';', vec_25), Character('<', vec_26), Character('=', vec_27), Character('>', vec_28),
+Character('?', vec_29), Character('@', vec_30), Character('A', vec_31), Character('B', vec_32),
+Character('C', vec_33), Character('D', vec_34), Character('E', vec_35), Character('F', vec_36),
+Character('G', vec_37), Character('H', vec_38), Character('I', vec_39), Character('J', vec_40),
+Character('K', vec_41), Character('L', vec_42), Character('M', vec_43), Character('N', vec_44),
+Character('O', vec_45), Character('P', vec_46), Character('Q', vec_47), Character('R', vec_48),
+Character('S', vec_49), Character('T', vec_50), Character('U', vec_51), Character('V', vec_52),
+Character('W', vec_53), Character('X', vec_54), Character('Y', vec_55), Character('Z', vec_56),
+Character('[', vec_57), Character('\\', vec_58), Character(']', vec_59), Character('^', vec_60),
+Character('_', vec_61), Character('`', vec_62), Character('a', vec_63), Character('b', vec_64),
+Character('c', vec_65), Character('d', vec_66), Character('e', vec_67), Character('f', vec_68),
+Character('g', vec_69), Character('h', vec_70), Character('i', vec_71), Character('j', vec_72),
+Character('k', vec_73), Character('l', vec_74), Character('m', vec_75), Character('n', vec_76),
+Character('o', vec_77), Character('p', vec_78), Character('q', vec_79), Character('r', vec_80),
+Character('s', vec_81), Character('t', vec_82), Character('u', vec_83), Character('v', vec_84),
+Character('w', vec_85), Character('x', vec_86), Character('y', vec_87), Character('z', vec_88),
+Character('{', vec_89), Character('|', vec_90), Character('}', vec_91), Character('~', vec_92) };*/
+
+Character* characters = new Character[63]{Character('0', vec_14), Character('1', vec_15),Character('2', vec_16),
+Character('3', vec_17), Character('4', vec_18), Character('5', vec_19), Character('6', vec_20),
+Character('7', vec_21), Character('8', vec_22), Character('9', vec_23),
+Character('?', vec_29), Character('A', vec_31), Character('B', vec_32),Character('C', vec_33),
+Character('D', vec_34), Character('E', vec_35), Character('F', vec_36),Character('G', vec_37),
+Character('H', vec_38), Character('I', vec_39), Character('J', vec_40),
+Character('K', vec_41), Character('L', vec_42), Character('M', vec_43), Character('N', vec_44),
+Character('O', vec_45), Character('P', vec_46), Character('Q', vec_47), Character('R', vec_48),
+Character('S', vec_49), Character('T', vec_50), Character('U', vec_51), Character('V', vec_52),
+Character('W', vec_53), Character('X', vec_54), Character('Y', vec_55), Character('Z', vec_56), Character('a', vec_63), Character('b', vec_64),
+Character('c', vec_65), Character('d', vec_66), Character('e', vec_67), Character('f', vec_68),
+Character('g', vec_69), Character('h', vec_70), Character('i', vec_71), Character('j', vec_72),
+Character('k', vec_73), Character('l', vec_74), Character('m', vec_75), Character('n', vec_76),
+Character('o', vec_77), Character('p', vec_78), Character('q', vec_79), Character('r', vec_80),
+Character('s', vec_81), Character('t', vec_82), Character('u', vec_83), Character('v', vec_84),
+Character('w', vec_85), Character('x', vec_86), Character('y', vec_87), Character('z', vec_88) };

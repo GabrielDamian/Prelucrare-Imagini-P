@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <cmath>
+#include <limits.h>
 #include<opencv2/imgcodecs.hpp>
 #include<opencv2/highgui.hpp>
 #include<opencv2/imgproc.hpp>
@@ -22,6 +23,8 @@ template<typename T>
 void printArray(T* array, int size);
 void printMatrix(int** mat, int width, int height);
 void calculateCharacterValues(Mat);
+int similarityIndex(int* sectionValues1, int* sectionValues2, int size);
+char getCharacterBySectionValues(int* values, int size);
 
 void aplicareThreshold(Mat img, uint8_t threshold);
 int automaticThreshold(Mat img);
