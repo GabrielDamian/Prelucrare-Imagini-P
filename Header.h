@@ -8,10 +8,13 @@
 using namespace cv;
 using namespace std;
 
+#define ROWS 4
+#define COLS 3
+
 struct Character {
 	char ch;
-	int fr[8] = { 0 };
-	Character(const char ch, int valori[], int marime = 8) {
+	double fr[12] = { 0 };
+	Character(const char ch, double valori[], int marime = 12) {
 		this->ch = ch;
 		for (int i = 0; i < marime; ++i) {
 			this->fr[i] = valori[i];
@@ -23,8 +26,8 @@ template<typename T>
 void printArray(T* array, int size);
 void printMatrix(int** mat, int width, int height);
 void calculateCharacterValues(Mat);
-int similarityIndex(int* sectionValues1, int* sectionValues2, int size);
-char getCharacterBySectionValues(int* values, int size);
+double similarityIndex(double* sectionValues1, double* sectionValues2, int size);
+char getCharacterBySectionValues(double* values, int size);
 
 void aplicareThreshold(Mat img, uint8_t threshold);
 int automaticThreshold(Mat img);

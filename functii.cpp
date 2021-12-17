@@ -1,8 +1,21 @@
 #include"Header.h"
 #include "Caractere.h"
 template <typename T>
+void printInFile(T* array, int size) {
+	printf("POAL");
+	FILE* f;
+	fopen_s(&f, "input.txt", "a");
+	fprintf(f,"Array : ");
+	for (int i = 0; i < size; ++i) {
+		fprintf(f,"%lf ", array[i]);
+	}
+	fprintf(f,"\n");
+	fclose(f);
+}
+
+template <typename T>
 void printArray(T* array, int size) {
-	printf("\nArray : ");
+	printf("Array : ");
 	for (int i = 0; i < size; ++i) {
 		cout << array[i] << " ";
 	}
@@ -20,18 +33,19 @@ void printMatrix(int** mat, int height, int width) {
 	}
 }
 
-int similarityIndex(int* sectionValues1,int* sectionValues2,int size = 8) {
-	int sum = 0;
+double similarityIndex(double* sectionValues1,double* sectionValues2,int size = 12) {
+	double sum = 0;
 	for (int i = 0; i < size; ++i) {
-		sum += abs(sectionValues1[i] - sectionValues2[i]);
+		sum += abs(sectionValues1[i] - sectionValues2[i]) ;
 	}
 	return sum;
 }
 
-char getCharacterBySectionValues(int* values, int size=8) {
+char getCharacterBySectionValues(double* values, int size=12) {
+
 	char resultedCharacter = characters[0].ch;
-	int min = similarityIndex(values,characters[0].fr);
-	for (int i = 1; i < 63; ++i) {
+	double min = similarityIndex(values,characters[0].fr);
+	for (int i = 1; i < 62; ++i) {
 		int similarity = similarityIndex(values, characters[i].fr);
 		if (similarity < min) {
 			min = similarity;
@@ -326,9 +340,15 @@ void characterDetector(Mat original, Mat output) {
 	Mat img = original.clone();
 	Mat imgGray = RGB2GRAY(img);
 
+	
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
-	int nrOfReactangles;
-	int** words = generateBoxesForText(imgGray, nrOfReactangles, 7);
+	cout << endl << "Imagine initiala:" << endl;
+	imshow("Source image:", imgGray);
+	waitKey(0);
+	//threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
+
+	int nrOfReactangles = 0;
+	int** words = generateBoxesForText(imgGray, nrOfReactangles, 4);
 	
 	for (int wordIndex = 0; wordIndex < nrOfReactangles; ++wordIndex) {
 		//segmentarea cuvantului
@@ -336,79 +356,63 @@ void characterDetector(Mat original, Mat output) {
 		int y = words[wordIndex][1];
 		int w = words[wordIndex][3];
 		int h = words[wordIndex][2];
-		Mat wordImage = img(Rect(x, y, w, h));
 
+		Mat wordImage = img(Rect(x, y, w, h));
 		string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
 		imwrite(concat, wordImage);
+
 		wordImage = imread(concat);
 
-		copyMakeBorder(wordImage, wordImage, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));
-		Mat wordImageBinary;
-		threshold(RGB2GRAY(wordImage), wordImageBinary, 0, 255, THRESH_OTSU);
+		Mat cuvantBordat;
+		copyMakeBorder(wordImage, cuvantBordat, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));
 
+		threshold(RGB2GRAY(cuvantBordat), cuvantBordat, 20, 255, THRESH_BINARY);
 		int nrOfCharacters;
-		int** characters = generateBoxesForText(wordImageBinary, nrOfCharacters, 1);
+		int** characters = generateBoxesForText(cuvantBordat, nrOfCharacters, 1);
 
 		//segmenarea literei
+		string litere_concatenate = "";
+		cout << "AICI_1:";
+
 		for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
 			int xCharacter = characters[characterIndex][0];
 			int yCharacter = characters[characterIndex][1];
 			int wCharacter = characters[characterIndex][3];
 			int hCharacter = characters[characterIndex][2];
-			int xVerical = xCharacter + ceil((double)wCharacter / 2);
-			int y0Horizontal = yCharacter + hCharacter / 4;
-			int y1Horizontal = yCharacter + hCharacter / 2;
-			int y2Horizontal = yCharacter + hCharacter * (3/4);
 
-			int* sectionValues = new int[8]{ 0,0,0,0,0,0,0,0 };
-			/* parcugerea celor 8 zone din fiecare caracter
-			     0    |		1
-			----------|---------- y0Horizontal
-				 2    |		3
-			----------|---------- y1Horizontal
-				 4	  |		5
-			----------|---------- y2Horizontal
-				 6	  |		7
-				 xVeritical	
-			*/
-			for (int rowIndexPixel = yCharacter; rowIndexPixel < yCharacter + hCharacter - 1; ++rowIndexPixel) {
-				for (int columnIndexPixel = xCharacter; columnIndexPixel < xCharacter + wCharacter - 1; ++columnIndexPixel) {
-					uint8_t pixel = wordImageBinary.at<uint8_t>(rowIndexPixel, columnIndexPixel);
+			int wRegion = wCharacter / COLS;
+			int hRegion = hCharacter / ROWS;
+
+			int* sectionValues = new int[ROWS * COLS]{ 0 };
+			int* totalPixels = new int[ROWS * COLS];
+			for (int _ = 0; _ < ROWS * COLS; ++_) {
+				totalPixels[_] = wRegion * hRegion;
+				sectionValues[_] = 0;
+			}
+
+			for (int rowIndexPixel = 0; rowIndexPixel < hCharacter; ++rowIndexPixel) {
+				for (int columnIndexPixel = 0; columnIndexPixel < wCharacter; ++columnIndexPixel) {
+					int pixel = (int)imgGray.at<uint8_t>(rowIndexPixel + yCharacter, columnIndexPixel + xCharacter);
 					if (pixel == 0) {
-						if (columnIndexPixel <= xVerical && rowIndexPixel < y0Horizontal) {  // 0
-							sectionValues[0]++;
-						}
-						else if (columnIndexPixel > xVerical && rowIndexPixel < y0Horizontal) {  // 1
-							sectionValues[1]++;
-						}
-						else if (columnIndexPixel <= xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 2
-							sectionValues[2]++;
-						}
-						else if (columnIndexPixel > xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 3
-							sectionValues[3]++;
-						}
-						else if (columnIndexPixel <= xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 4
-							sectionValues[4]++;
-						}
-						else if (columnIndexPixel > xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 5
-							sectionValues[5]++;
-						}
-						else if (columnIndexPixel <= xVerical && rowIndexPixel >= y2Horizontal) {  // 6
-							sectionValues[6]++;
-						}
-						else if (columnIndexPixel > xVerical && rowIndexPixel >= y2Horizontal) {
-							sectionValues[7]++;
-						}
+						int regionX = columnIndexPixel / wRegion;
+						int regionY = rowIndexPixel / hRegion;
+						int position = regionY * COLS + regionX;
+						sectionValues[position] ++;
 					}
 				}
 			}
 
-			
-			cout << "%%%%%%%% " << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$" << endl;
-			string nume = "char" + to_string(characterIndex);
-			imshow(nume, wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
+			double* proportiiSectiuni = new double[ROWS * COLS]{ 0 };
+			for (int i = 0; i < ROWS * COLS; i++) {
+				proportiiSectiuni[i] = (double)sectionValues[i] / (double)totalPixels[i];
+			}
+			//printInFile(proportiiSectiuni,ROWS*COLS);
+
+			cout << "Litera:" << getCharacterBySectionValues(proportiiSectiuni) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(proportiiSectiuni) << endl;
+			/*string nume = "char" + to_string(characterIndex);
+			imshow(nume, imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
 			waitKey(0);
-			destroyAllWindows();
+			destroyAllWindows();*/
 		}
 	}
 }
@@ -417,73 +421,51 @@ void calculateCharacterValues(Mat img) {
 	Mat imgGray = RGB2GRAY(img);
 
 	threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
+	imwrite("CEVA.png", imgGray);
 	int nrOfCharacters;
-	int** characters = generateBoxesForText(imgGray, nrOfCharacters, 7);
+	int** characters = generateBoxesForText(imgGray, nrOfCharacters, 1); //aici pune 6
 
-	drawReactagles(img, characters, nrOfCharacters);
-	cv::imshow("all", img);
 	//segmenarea literei
+	string cuvant_temp = " ";
 	for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
 		int xCharacter = characters[characterIndex][0];
 		int yCharacter = characters[characterIndex][1];
 		int wCharacter = characters[characterIndex][3];
 		int hCharacter = characters[characterIndex][2];
-		int xVerical = xCharacter + ceil((double)wCharacter / 2);
-		int y0Horizontal = yCharacter + hCharacter / 4;
-		int y1Horizontal = yCharacter + hCharacter / 2;
-		int y2Horizontal = yCharacter + hCharacter * (3 / 4);
 
-		int* sectionValues = new int[8]{ 0,0,0,0,0,0,0,0 };
-		/* parcugerea celor 8 zone din fiecare caracter
-			 0    |		1
-		----------|---------- y0Horizontal
-			 2    |		3
-		----------|---------- y1Horizontal
-			 4	  |		5
-		----------|---------- y2Horizontal
-			 6	  |		7
-			 xVeritical
-		*/
-		for (int rowIndexPixel = yCharacter; rowIndexPixel < yCharacter + hCharacter; ++rowIndexPixel) {
-			for (int columnIndexPixel = xCharacter; columnIndexPixel < xCharacter + wCharacter; ++columnIndexPixel) {
-				uint8_t pixel = imgGray.at<uint8_t>(rowIndexPixel, columnIndexPixel);
+		int wRegion = wCharacter / COLS;
+		int hRegion = hCharacter / ROWS;
+
+		int* sectionValues = new int[ROWS * COLS]{ 0 };
+		int* totalPixels = new int[ROWS * COLS];
+		for (int _ = 0; _ < ROWS * COLS; ++_) {
+			totalPixels[_] = wRegion * hRegion;
+			sectionValues[_] = 0;
+		}
+		
+		for (int rowIndexPixel = 0; rowIndexPixel < hCharacter ; ++rowIndexPixel) {
+			for (int columnIndexPixel = 0; columnIndexPixel < wCharacter ; ++columnIndexPixel) {
+				int pixel = (int)imgGray.at<uint8_t>(rowIndexPixel + yCharacter, columnIndexPixel + xCharacter);
 				if (pixel == 0) {
-					if (columnIndexPixel <= xVerical && rowIndexPixel < y0Horizontal) {  // 0
-						sectionValues[0]++;
-					}
-					else if (columnIndexPixel > xVerical && rowIndexPixel < y0Horizontal) {  // 1
-						sectionValues[1]++;
-					}
-					else if (columnIndexPixel <= xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 2
-						sectionValues[2]++;
-					}
-					else if (columnIndexPixel > xVerical && rowIndexPixel >= y0Horizontal && rowIndexPixel < y1Horizontal) {  // 3
-						sectionValues[3]++;
-					}
-					else if (columnIndexPixel <= xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 4
-						sectionValues[4]++;
-					}
-					else if (columnIndexPixel > xVerical && rowIndexPixel >= y1Horizontal && rowIndexPixel < y2Horizontal) {  // 5
-						sectionValues[5]++;
-					}
-					else if (columnIndexPixel <= xVerical && rowIndexPixel >= y2Horizontal) {  // 6
-						sectionValues[6]++;
-					}
-					else if (columnIndexPixel > xVerical && rowIndexPixel >= y2Horizontal) {  // 7
-						sectionValues[7]++;
-					}
+					int regionX = columnIndexPixel / wRegion;
+					int regionY = rowIndexPixel / hRegion;
+					int position = regionY * COLS + regionX;
+					sectionValues[ position ] ++;
 				}
 			}
 		}
-		cout << "%%%%%%%% " << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$" << endl;
-		/*
-		printArray(sectionValues, 8);
-		printf("\nx=%d y=%d w=%d h=%d", xCharacter, yCharacter, wCharacter, hCharacter);
-		printf("\nv=%d o1=%d o2=%d o3=%d\n", xVerical, y0Horizontal, y1Horizontal, y2Horizontal);*/
-		string nume = "char" + to_string(characterIndex);
+
+		double* proportiiSectiuni = new double[ROWS*COLS]{ 0 };
+		for (int i = 0; i < ROWS * COLS; i++) {
+			proportiiSectiuni[i] = (double)sectionValues[i] / (double)totalPixels[i];
+		}
+		//printInFile(proportiiSectiuni,ROWS*COLS);
+		
+		cout <<"Litera:"<< getCharacterBySectionValues(proportiiSectiuni) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(proportiiSectiuni) << endl;
+		/*string nume = "char" + to_string(characterIndex);
 		imshow(nume, imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
 		waitKey(0);
-		destroyAllWindows();
+		destroyAllWindows();*/
 	}
 }
 
