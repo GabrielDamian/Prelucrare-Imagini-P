@@ -365,7 +365,7 @@ void characterDetector(Mat original, Mat output) {
 	//threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
 
 	int nrOfReactangles = 0;
-	int** words = generateBoxesForText(imgGray, nrOfReactangles, 4);
+	int** words = generateBoxesForText(imgGray, nrOfReactangles, 2);
 	
 	for (int wordIndex = 0; wordIndex < nrOfReactangles; ++wordIndex) {
 		//segmentarea cuvantului
@@ -376,29 +376,40 @@ void characterDetector(Mat original, Mat output) {
 
 		Mat wordImage = img(Rect(x, y, w, h));
 		string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
+		copyMakeBorder(wordImage, wordImage, 1, 1, 1, 1, BORDER_CONSTANT, Scalar(255, 255, 255));
 		imwrite(concat, wordImage);
 
 		wordImage = imread(concat);
+		imshow(concat, wordImage);
 
 		/*
 		Mat cuvantBordat;
 		copyMakeBorder(wordImage, cuvantBordat, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));*/
+		//Mat imgCharGray = RGB2GRAY(wordImage);
+		
+		
+		//threshold(imgCharGray, wordImage, 20, 255, THRESH_BINARY);
+		//int nrOfCharacters;
+		//int** characters = generateBoxesForText(imgCharGray, nrOfCharacters, 2);
 
-		threshold(RGB2GRAY(wordImage), wordImage, 20, 255, THRESH_BINARY);
-		int nrOfCharacters;
-		int** characters = generateBoxesForText(wordImage, nrOfCharacters, 1);
-
-		//segmenarea literei
-		string litere_concatenate = "";
-
-		string cuvant_temp = " ";
+		/*
 		for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
+
 			int xCharacter = characters[characterIndex][0];
 			int yCharacter = characters[characterIndex][1];
 			int wCharacter = characters[characterIndex][3];
 			int hCharacter = characters[characterIndex][2];
 
-			Mat imgCharacter = wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
+			Mat charImage = wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter));
+			string concat_litera = "Litera/" + to_string(characterIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
+			imwrite(concat_litera, charImage);
+
+			charImage = imread(concat_litera);
+			imshow(concat_litera, charImage);
+			waitKey(0);
+		}
+		*/
+			/*
 			Mat imgResizedCharacter = resizeTo(imgCharacter, 30, 30);
 
 			int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
@@ -435,7 +446,9 @@ void characterDetector(Mat original, Mat output) {
 			imshow(nume + "marite", imgResizedCharacter);
 			waitKey(0);
 			destroyAllWindows();
+			
 		}
+	   */
 	}
 }
 

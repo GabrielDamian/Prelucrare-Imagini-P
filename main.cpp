@@ -1,7 +1,7 @@
 #include"Header.h"
 
 int main() {
-	Mat img = imread("Images/test1.png");
+	Mat img = imread("Images/0.jpg");
 	Mat rez = img.clone();
 	//textDetector(img,rez);
 	//btnDetector(img,rez);
