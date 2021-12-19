@@ -2,7 +2,6 @@
 #include "Caractere.h"
 template <typename T>
 void printInFile(T* array, int size) {
-	printf("POAL");
 	FILE* f;
 	fopen_s(&f, "input.txt", "a");
 	fprintf(f,"Array : ");
@@ -33,19 +32,27 @@ void printMatrix(int** mat, int height, int width) {
 	}
 }
 
-double similarityIndex(double* sectionValues1,double* sectionValues2,int size = 12) {
+Mat resizeTo(Mat img, uint width, uint height) {
+	Mat rez;
+
+	resize(img, rez, Size(width, height), INTER_LINEAR);
+
+	return rez;
+}
+
+double similarityIndex(double* sectionValues1,double* sectionValues2) {
 	double sum = 0;
-	for (int i = 0; i < size; ++i) {
+	for (int i = 0; i < ROWS*COLS; ++i) {
 		sum += abs(sectionValues1[i] - sectionValues2[i]) ;
 	}
 	return sum;
 }
 
-char getCharacterBySectionValues(double* values, int size=12) {
+char getCharacterBySectionValues(double* values, int size=62) {
 
 	char resultedCharacter = characters[0].ch;
 	double min = similarityIndex(values,characters[0].fr);
-	for (int i = 1; i < 62; ++i) {
+	for (int i = 1; i < size; ++i) {
 		int similarity = similarityIndex(values, characters[i].fr);
 		if (similarity < min) {
 			min = similarity;
@@ -149,7 +156,7 @@ int automaticThreshold(Mat img) {
 	return findMostFreqBlackFromHist(histogram,255);
 }
 
-int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSize)
+int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSize, int verificari = 6)
 {
 	//initalizare matrice auxiliara de rezultate
 	int** matrix = new int* [size];
@@ -166,9 +173,19 @@ int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSi
 		{
 			int i_start = i;
 			int component_height = 0;
+			bool verificare = 0;
 			do {
 				component_height++;
-			} while (heightFrec[i + component_height] != 0 || heightFrec[i + component_height + 1] != 0 || heightFrec[i + component_height + 2] != 0);
+				verificare = 0;
+				try {
+					for (int j = 0; j < verificari; ++j) {
+						verificare = verificare || heightFrec[i + component_height + j]; // daca macar una e adv e bine
+					}
+				}
+				catch (Exception e) {
+
+				}
+			} while (verificare);
 
 			int i_finish = i + component_height;
 			i = i_finish;
@@ -224,8 +241,13 @@ int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_si
 				l++;
 				verificare = 0;
 				
-				for (int j = 0; j < verificari; ++j) {
-					verificare = verificare || heightFrec[i + l + j]; // daca macar una e adv e bine
+				try {
+					for (int j = 0; j < verificari; ++j) {
+						verificare = verificare || heightFrec[i + l + j]; // daca macar una e adv e bine
+					}
+				}
+				catch (Exception e) {
+
 				}
 				
 			} while (verificare);
@@ -279,12 +301,11 @@ int* blackPixelsOnEachColumnWithBorderedRows(Mat img, int y0, int y1, int width)
 	{
 		frecv[i] = 0;
 	}
-
 	for (int i = 0; i < width; ++i)
 	{
 		for (int j = y0; j < y1; ++j)
 		{
-			if (img.at<uint8_t>(j, i) == 0)
+			if ((int)img.at<uint8_t>(j, i) == 0)
 			{
 				frecv[i]++;
 			}
@@ -339,12 +360,8 @@ int** generateBoxesForText(Mat img, int &OutputNrOfRectagles, int pixelsBetweenB
 void characterDetector(Mat original, Mat output) {
 	Mat img = original.clone();
 	Mat imgGray = RGB2GRAY(img);
-
 	
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
-	cout << endl << "Imagine initiala:" << endl;
-	imshow("Source image:", imgGray);
-	waitKey(0);
 	//threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
 
 	int nrOfReactangles = 0;
@@ -363,25 +380,29 @@ void characterDetector(Mat original, Mat output) {
 
 		wordImage = imread(concat);
 
+		/*
 		Mat cuvantBordat;
-		copyMakeBorder(wordImage, cuvantBordat, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));
+		copyMakeBorder(wordImage, cuvantBordat, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255,255,255));*/
 
-		threshold(RGB2GRAY(cuvantBordat), cuvantBordat, 20, 255, THRESH_BINARY);
+		threshold(RGB2GRAY(wordImage), wordImage, 20, 255, THRESH_BINARY);
 		int nrOfCharacters;
-		int** characters = generateBoxesForText(cuvantBordat, nrOfCharacters, 1);
+		int** characters = generateBoxesForText(wordImage, nrOfCharacters, 1);
 
 		//segmenarea literei
 		string litere_concatenate = "";
-		cout << "AICI_1:";
 
+		string cuvant_temp = " ";
 		for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
 			int xCharacter = characters[characterIndex][0];
 			int yCharacter = characters[characterIndex][1];
 			int wCharacter = characters[characterIndex][3];
 			int hCharacter = characters[characterIndex][2];
 
-			int wRegion = wCharacter / COLS;
-			int hRegion = hCharacter / ROWS;
+			Mat imgCharacter = wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
+			Mat imgResizedCharacter = resizeTo(imgCharacter, 30, 30);
+
+			int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
+			int hRegion = ceil((double)imgResizedCharacter.rows / ROWS);
 
 			int* sectionValues = new int[ROWS * COLS]{ 0 };
 			int* totalPixels = new int[ROWS * COLS];
@@ -390,9 +411,9 @@ void characterDetector(Mat original, Mat output) {
 				sectionValues[_] = 0;
 			}
 
-			for (int rowIndexPixel = 0; rowIndexPixel < hCharacter; ++rowIndexPixel) {
-				for (int columnIndexPixel = 0; columnIndexPixel < wCharacter; ++columnIndexPixel) {
-					int pixel = (int)imgGray.at<uint8_t>(rowIndexPixel + yCharacter, columnIndexPixel + xCharacter);
+			for (int rowIndexPixel = 0; rowIndexPixel < imgResizedCharacter.rows; ++rowIndexPixel) {
+				for (int columnIndexPixel = 0; columnIndexPixel < imgResizedCharacter.cols; ++columnIndexPixel) {
+					int pixel = (int)imgResizedCharacter.at<uint8_t>(rowIndexPixel, columnIndexPixel);
 					if (pixel == 0) {
 						int regionX = columnIndexPixel / wRegion;
 						int regionY = rowIndexPixel / hRegion;
@@ -402,17 +423,18 @@ void characterDetector(Mat original, Mat output) {
 				}
 			}
 
-			double* proportiiSectiuni = new double[ROWS * COLS]{ 0 };
+			double* proportiiSectiuni = new double[ROWS * COLS];
 			for (int i = 0; i < ROWS * COLS; i++) {
 				proportiiSectiuni[i] = (double)sectionValues[i] / (double)totalPixels[i];
 			}
 			//printInFile(proportiiSectiuni,ROWS*COLS);
 
 			cout << "Litera:" << getCharacterBySectionValues(proportiiSectiuni) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(proportiiSectiuni) << endl;
-			/*string nume = "char" + to_string(characterIndex);
-			imshow(nume, imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
+			string nume = "char" + to_string(characterIndex);
+			imshow(nume, wordImage(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
+			imshow(nume + "marite", imgResizedCharacter);
 			waitKey(0);
-			destroyAllWindows();*/
+			destroyAllWindows();
 		}
 	}
 }
@@ -421,9 +443,8 @@ void calculateCharacterValues(Mat img) {
 	Mat imgGray = RGB2GRAY(img);
 
 	threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
-	imwrite("CEVA.png", imgGray);
 	int nrOfCharacters;
-	int** characters = generateBoxesForText(imgGray, nrOfCharacters, 1); //aici pune 6
+	int** characters = generateBoxesForText(imgGray, nrOfCharacters, 1);
 
 	//segmenarea literei
 	string cuvant_temp = " ";
@@ -433,8 +454,11 @@ void calculateCharacterValues(Mat img) {
 		int wCharacter = characters[characterIndex][3];
 		int hCharacter = characters[characterIndex][2];
 
-		int wRegion = wCharacter / COLS;
-		int hRegion = hCharacter / ROWS;
+		Mat imgCharacter = imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
+		Mat imgResizedCharacter = resizeTo(imgCharacter, 30, 30);
+
+		int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
+		int hRegion = ceil((double)imgResizedCharacter.rows / ROWS);
 
 		int* sectionValues = new int[ROWS * COLS]{ 0 };
 		int* totalPixels = new int[ROWS * COLS];
@@ -443,9 +467,9 @@ void calculateCharacterValues(Mat img) {
 			sectionValues[_] = 0;
 		}
 		
-		for (int rowIndexPixel = 0; rowIndexPixel < hCharacter ; ++rowIndexPixel) {
-			for (int columnIndexPixel = 0; columnIndexPixel < wCharacter ; ++columnIndexPixel) {
-				int pixel = (int)imgGray.at<uint8_t>(rowIndexPixel + yCharacter, columnIndexPixel + xCharacter);
+		for (int rowIndexPixel = 0; rowIndexPixel < imgResizedCharacter.rows ; ++rowIndexPixel) {
+			for (int columnIndexPixel = 0; columnIndexPixel < imgResizedCharacter.cols ; ++columnIndexPixel) {
+				int pixel = (int)imgResizedCharacter.at<uint8_t>(rowIndexPixel, columnIndexPixel);
 				if (pixel == 0) {
 					int regionX = columnIndexPixel / wRegion;
 					int regionY = rowIndexPixel / hRegion;
@@ -455,17 +479,18 @@ void calculateCharacterValues(Mat img) {
 			}
 		}
 
-		double* proportiiSectiuni = new double[ROWS*COLS]{ 0 };
+		double* proportiiSectiuni = new double[ROWS*COLS];
 		for (int i = 0; i < ROWS * COLS; i++) {
 			proportiiSectiuni[i] = (double)sectionValues[i] / (double)totalPixels[i];
 		}
 		//printInFile(proportiiSectiuni,ROWS*COLS);
 		
 		cout <<"Litera:"<< getCharacterBySectionValues(proportiiSectiuni) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(proportiiSectiuni) << endl;
-		/*string nume = "char" + to_string(characterIndex);
+		string nume = "char" + to_string(characterIndex);
 		imshow(nume, imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)));
+		//imshow(nume + "resized down", resizeTo(imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)), 10, 10));
 		waitKey(0);
-		destroyAllWindows();*/
+		destroyAllWindows();
 	}
 }
 
@@ -534,6 +559,62 @@ void btnDetector(Mat original, Mat output) {
 	}
 }
 
+void checkboxDetector(Mat original, Mat output) {
+	Mat img = original.clone(), imgBlur, imgCanny, imgDil;
+
+	//preprocesare
+	GaussianBlur(img, imgBlur, Size(3, 3), 3, 0);
+	Canny(imgBlur, imgCanny, 25, 75);
+	dilate(imgCanny, imgDil, getStructuringElement(MORPH_RECT, Size(3, 3)));
+
+	//procesare
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	findContours(imgDil, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE); //gaseste contururi
+
+	for (int i = 0; i < contours.size(); ++i) {
+		vector<vector<Point>> poligoane(contours.size());
+		approxPolyDP(contours[i], poligoane[i], 0.02 * arcLength(contours[i], true), true); //generare poligoane
+
+		if (!(contourArea(contours[i], true) > 500 && poligoane[i].size() == 4)) continue; //eliminare trash
+
+		//coordonate puncte si lungime laturi
+		Point ss = Point(poligoane[i][0].x, poligoane[i][0].y);
+		Point ds = Point(poligoane[i][1].x, poligoane[i][1].y);
+		Point dj = Point(poligoane[i][2].x, poligoane[i][2].y);
+		Point sj = Point(poligoane[i][3].x, poligoane[i][3].y);
+		int lungimeStanga = sj.y - ss.y;
+		int lungimeSus = ds.x - ss.x;
+		int lungimeDreapta = dj.y - ds.y;
+		int lungimeJos = dj.y - ds.y;
+		//verif conditie dreptunghi (laturi egale + paralele)
+		//laturi aprox egale
+		int diferentaLatime = abs(lungimeStanga - lungimeDreapta);
+		int diferentaLungime = abs(lungimeSus - lungimeJos);
+
+		
+		if (diferentaLatime > lungimeDreapta * 0.1 || diferentaLatime > lungimeStanga * 0.1) // diferenta prea mare de latime
+			if (diferentaLungime > lungimeSus * 0.1 || diferentaLungime > lungimeJos * 0.1) continue; //diferenta prea mare de lungime
+		
+
+		//double mediaLaturilor = (double)(lungimeStanga + lungimeDreapta + lungimeSus + lungimeJos) / 4;
+		//if (mediaLaturilor > lungimeStanga * 0.1) continue;
+
+		//laturi aprox paralele
+
+		int inclinareaStangii = abs(ss.x - sj.y);
+		int inclinareaDreptei = abs(ds.x - dj.y);
+		int inclinareaSus = abs(ss.y - ds.y);
+		int inclinareaJos = abs(sj.y - dj.y);
+		int trasholdVertical = lungimeDreapta * 0.05;
+		int trasholdOrizontal = lungimeSus * 0.05;
+		if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
+			if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
+				continue;
+		drawContours(output, poligoane, i, Scalar(0, 0, 255), 2);
+	}
+}
+
 Mat generateLegendCustom(int w, int h)
 {
 	Mat img(w, h, CV_8UC3, Scalar(255, 255,255));
@@ -551,7 +632,6 @@ Mat generateLegendCustom(int w, int h)
 
 	return img;
 }
-
 
 Mat3b ataseazaLegenda(Mat rez, int width_legenda)
 {

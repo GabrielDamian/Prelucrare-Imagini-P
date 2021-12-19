@@ -11,9 +11,9 @@ int main() {
 	//from unicodes
 	//calculateCharacterValues(img);
 
-	//Mat3b imagine_finala = ataseazaLegenda(rez, 280);
+	//Mat3b imagineFinala = ataseazaLegenda(rez, 280);
 
-	//imshow("FINAL", rez);
-	//waitKey(0);
-	//destroyAllWindows();
+	//imshow("FINAL", imagineFinala);
+	waitKey(0);
+	destroyAllWindows();
 }
