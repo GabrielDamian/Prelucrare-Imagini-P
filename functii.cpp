@@ -40,6 +40,25 @@ Mat resizeTo(Mat img, uint width, uint height) {
 	return rez;
 }
 
+Mat eliminatePadding(Mat img) {
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			img.at<uint8_t>(i, j) = 255 - img.at<uint8_t>(i, j);
+		}
+	}
+	Mat nonZeroCoords;
+	findNonZero(img, nonZeroCoords);
+	Rect nonBlackArea = boundingRect(nonZeroCoords);
+	Mat output = img(nonBlackArea).clone();
+
+	for (int i = 0; i < output.rows; ++i) {
+		for (int j = 0; j < output.cols; ++j) {
+			output.at<uint8_t>(i, j) = 255 - output.at<uint8_t>(i, j);
+		}
+	}
+	return output;
+}
+
 int similarityIndex(int* sectionValues1,int* sectionValues2) {
 	double sum = 0;
 	for (int i = 0; i < ROWS*COLS; ++i) {
@@ -391,7 +410,8 @@ void calculateCharacterValues(Mat img) {
 		int hCharacter = characters[characterIndex][2];
 
 		Mat imgCharacter = imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
-		Mat imgResizedCharacter = resizeTo(imgCharacter, 20, 20);
+		imgCharacter = eliminatePadding(imgCharacter);
+		Mat imgResizedCharacter = resizeTo(imgCharacter, 10, 20);
 
 		int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
 		int hRegion = ceil((double)imgResizedCharacter.rows / ROWS);
@@ -409,7 +429,7 @@ void calculateCharacterValues(Mat img) {
 				}
 			}
 		}
-		printInFile(sectionValues,ROWS*COLS);
+		//printInFile(sectionValues,ROWS*COLS);
 		
 		cout << "Litera:" << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(sectionValues) << endl;
 		string nume = "char" + to_string(characterIndex);
@@ -471,7 +491,6 @@ void btnDetector(Mat original, Mat output) {
 			if (diferentaLungime > lungimeSus * 0.1 || diferentaLungime > lungimeJos * 0.1) continue; //diferenta prea mare de lungime
 
 		//laturi aprox paralele
-		
 		int inclinareaStangii = abs(ss.x - sj.y);
 		int inclinareaDreptei = abs(ds.x - dj.y);
 		int inclinareaSus = abs(ss.y - ds.y);
@@ -481,6 +500,9 @@ void btnDetector(Mat original, Mat output) {
 			if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
 				if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
 					continue;
+
+		if (lungimeSus > img.cols * 0.35 || lungimeStanga > img.rows * 0.2) continue;
+
 		drawContours(output, poligoane, i, Scalar(0, 255, 0), 2);
 	}
 }
@@ -488,21 +510,19 @@ void btnDetector(Mat original, Mat output) {
 void checkboxDetector(Mat original, Mat output) {
 	Mat img = original.clone(), imgBlur, imgCanny, imgDil;
 
-	//preprocesare
-	GaussianBlur(img, imgBlur, Size(3, 3), 3, 0);
-	Canny(imgBlur, imgCanny, 25, 75);
-	dilate(imgCanny, imgDil, getStructuringElement(MORPH_RECT, Size(3, 3)));
+	Canny(img, imgCanny, 25, 75);
+	dilate(imgCanny, imgDil, getStructuringElement(MORPH_RECT, Size(2, 2)));
 
 	//procesare
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
-	findContours(imgDil, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE); //gaseste contururi
+	findContours(imgCanny, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE); //gaseste contururi
 
 	for (int i = 0; i < contours.size(); ++i) {
 		vector<vector<Point>> poligoane(contours.size());
 		approxPolyDP(contours[i], poligoane[i], 0.02 * arcLength(contours[i], true), true); //generare poligoane
 
-		if (!(contourArea(contours[i], true) > 500 && poligoane[i].size() == 4)) continue; //eliminare trash
+		if (!(contourArea(contours[i], true) > 100 && poligoane[i].size() == 4)) continue; //eliminare trash
 
 		//coordonate puncte si lungime laturi
 		Point ss = Point(poligoane[i][0].x, poligoane[i][0].y);
@@ -513,18 +533,10 @@ void checkboxDetector(Mat original, Mat output) {
 		int lungimeSus = ds.x - ss.x;
 		int lungimeDreapta = dj.y - ds.y;
 		int lungimeJos = dj.y - ds.y;
-		//verif conditie dreptunghi (laturi egale + paralele)
+		//verif conditie patrat (laturi egale + paralele)
 		//laturi aprox egale
-		int diferentaLatime = abs(lungimeStanga - lungimeDreapta);
-		int diferentaLungime = abs(lungimeSus - lungimeJos);
-
-		
-		if (diferentaLatime > lungimeDreapta * 0.1 || diferentaLatime > lungimeStanga * 0.1) // diferenta prea mare de latime
-			if (diferentaLungime > lungimeSus * 0.1 || diferentaLungime > lungimeJos * 0.1) continue; //diferenta prea mare de lungime
-		
-
-		//double mediaLaturilor = (double)(lungimeStanga + lungimeDreapta + lungimeSus + lungimeJos) / 4;
-		//if (mediaLaturilor > lungimeStanga * 0.1) continue;
+		int diferenteLungimi = abs(lungimeStanga - lungimeSus) + abs(lungimeStanga - lungimeDreapta) + abs(lungimeStanga - lungimeJos);
+		if ( diferenteLungimi > 0.05) continue;
 
 		//laturi aprox paralele
 
@@ -532,12 +544,12 @@ void checkboxDetector(Mat original, Mat output) {
 		int inclinareaDreptei = abs(ds.x - dj.y);
 		int inclinareaSus = abs(ss.y - ds.y);
 		int inclinareaJos = abs(sj.y - dj.y);
-		int trasholdVertical = lungimeDreapta * 0.05;
-		int trasholdOrizontal = lungimeSus * 0.05;
+		int trasholdVertical = lungimeDreapta * 0.09;
+		int trasholdOrizontal = lungimeSus * 0.09;
 		if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
 			if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
 				continue;
-		drawContours(output, poligoane, i, Scalar(0, 0, 255), 2);
+		drawContours(output, poligoane, i, Scalar(0, 0, 0), 2);
 	}
 }
 

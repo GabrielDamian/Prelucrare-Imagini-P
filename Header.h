@@ -9,7 +9,7 @@ using namespace cv;
 using namespace std;
 
 #define ROWS 10
-#define COLS 10
+#define COLS 20
 
 struct Character {
 	char ch;
