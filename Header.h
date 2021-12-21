@@ -2,9 +2,14 @@
 #include <iostream>
 #include <cmath>
 #include <limits.h>
+#include <algorithm>
+#include <vector>
+#include <numeric>
+
 #include<opencv2/imgcodecs.hpp>
 #include<opencv2/highgui.hpp>
 #include<opencv2/imgproc.hpp>
+
 using namespace cv;
 using namespace std;
 

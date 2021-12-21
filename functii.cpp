@@ -1,5 +1,6 @@
 #include"Header.h"
 #include "Caractere.h"
+
 template <typename T>
 void printInFile(T* array, int size) {
 	FILE* f;
@@ -34,28 +35,16 @@ void printMatrix(int** mat, int height, int width) {
 
 Mat resizeTo(Mat img, uint width, uint height) {
 	Mat rez;
-
 	resize(img, rez, Size(width, height), INTER_LINEAR);
-
 	return rez;
 }
 
 Mat eliminatePadding(Mat img) {
-	for (int i = 0; i < img.rows; ++i) {
-		for (int j = 0; j < img.cols; ++j) {
-			img.at<uint8_t>(i, j) = 255 - img.at<uint8_t>(i, j);
-		}
-	}
+	std::transform(img.begin<uint8_t>(), img.end<uint8_t>(), img.begin<uint8_t>(), [](uint8_t p) {return (uint8_t)(255 - p); });
 	Mat nonZeroCoords;
 	findNonZero(img, nonZeroCoords);
-	Rect nonBlackArea = boundingRect(nonZeroCoords);
-	Mat output = img(nonBlackArea).clone();
-
-	for (int i = 0; i < output.rows; ++i) {
-		for (int j = 0; j < output.cols; ++j) {
-			output.at<uint8_t>(i, j) = 255 - output.at<uint8_t>(i, j);
-		}
-	}
+	Mat output = img(boundingRect(nonZeroCoords)).clone();
+	std::transform(output.begin<uint8_t>(), output.end<uint8_t>(), output.begin<uint8_t>(), [](uint8_t p) {return (uint8_t)(255 - p); });
 	return output;
 }
 
@@ -111,8 +100,7 @@ Mat RGB2GRAY(Mat input) {
 int* calculareFrecventa(Mat img) {
 	int width = img.size().width;
 	int height = img.size().height;
-	int* result = new int[255];
-	for (int i = 0; i < 255; ++i) result[i] = 0;
+	int* result = new int[255]{ 0 };
 
 	for (int i = 0; i < height; ++i)
 		for (int j = 0; j < width; ++j)
@@ -122,28 +110,15 @@ int* calculareFrecventa(Mat img) {
 }
 
 void aplicareThreshold(Mat img, uint8_t threshold) {
-	int width = img.size().width;
-	int height = img.size().height;
-
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			uint8_t* pixel = &(img.at<uint8_t>(i, j));
-			if (*pixel > threshold) {
-				*pixel = 255;
-			}
-			else {
-				*pixel = 0;
-			}
-		}
-	}
+	std::transform(img.begin<uint8_t>(), img.end<uint8_t>(), img.begin<uint8_t>(),
+		[threshold](uint8_t px) {return (uint8_t)(px > threshold ? 255 : 0); });
 }
 
 int* blackPixelsOnEachRow(Mat img) {
 	int width = img.cols;
 	int height = img.rows;
-	int* v = new int[height];
-	for (int i = 0; i < height; ++i) v[i] = 0;
-
+	int* v = new int[height] {0};
+	
 	for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {
 			if (img.at<uint8_t>(i, j) == 0) {
@@ -157,8 +132,7 @@ int* blackPixelsOnEachRow(Mat img) {
 int* blackPixelsOnEachColumn(Mat img) {
 	int width = img.size().width;
 	int height = img.size().height;
-	int* v = new int[width];
-	for (int i = 0; i < width; ++i) v[i] = 0;
+	int* v = new int[width] {0};
 
 	for (int i = 0; i < width; ++i) {
 		for (int j = 0; j < height; ++j) {
@@ -171,8 +145,7 @@ int* blackPixelsOnEachColumn(Mat img) {
 }
 
 int automaticThreshold(Mat img) {
-	int* histogram = calculareFrecventa(img);
-	return findMostFreqBlackFromHist(histogram,255);
+	return findMostFreqBlackFromHist(calculareFrecventa(img),255);
 }
 
 int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSize, int verificari = 6)
@@ -297,19 +270,15 @@ int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_si
 void drawReactagles(Mat img, int** rectangles, int nrOfRectangles) {
 	for (int i = 0; i < nrOfRectangles; ++i)
 	{
-		//Rect r = Rect(rectangles[i][0]-2, rectangles[i][1]-2, rectangles[i][3]+4, rectangles[1][2]+4);
-		Rect r = Rect(rectangles[i][0], rectangles[i][1], rectangles[i][3], rectangles[1][2]);
+		Rect r = Rect(rectangles[i][0]-2, rectangles[i][1]-2, rectangles[i][3]+4, rectangles[1][2]+4);
 		cv::rectangle(img, r, Scalar(0, 0, 255), 1);
 	}
 }
 
 int* blackPixelsOnEachColumnWithBorderedRows(Mat img, int y0, int y1, int width)
 {
-	int* frecv = new int[width];
-	for (int i = 0; i < width; ++i)
-	{
-		frecv[i] = 0;
-	}
+	int* frecv = new int[width] {0};
+
 	for (int i = 0; i < width; ++i)
 	{
 		for (int j = y0; j < y1; ++j)
@@ -442,7 +411,7 @@ void calculateCharacterValues(Mat img) {
 
 void textDetector(Mat original, Mat output) {
 
-	Mat img=original.clone();
+	Mat img = original.clone();
 	Mat imgGray = RGB2GRAY(img);
 
 	//threshold(imgGray, imgGray, 0, 255, THRESH_BINARY + THRESH_OTSU);
@@ -452,6 +421,11 @@ void textDetector(Mat original, Mat output) {
 	int nrOfReactangles;
 	int** rectangles_ = generateBoxesForText(imgGray,nrOfReactangles);
 	drawReactagles(output, rectangles_, nrOfReactangles);
+
+	for (int i = 0; i < nrOfReactangles * 4; ++i) {
+		free(rectangles_[i]);
+	}
+	free(rectangles_);
 }
 
 void btnDetector(Mat original, Mat output) {
@@ -508,7 +482,7 @@ void btnDetector(Mat original, Mat output) {
 }
 
 void checkboxDetector(Mat original, Mat output) {
-	Mat img = original.clone(), imgBlur, imgCanny, imgDil;
+	Mat img = original.clone(), imgCanny, imgDil;
 
 	Canny(img, imgCanny, 25, 75);
 	dilate(imgCanny, imgDil, getStructuringElement(MORPH_RECT, Size(2, 2)));
