@@ -17,6 +17,7 @@ using namespace std;
 #define COLS 21
 #define ROWSRESIZE 12
 #define COLSRESIZE 21
+#define NROFCHARACTERS 62
 
 struct Character {
 	char ch;

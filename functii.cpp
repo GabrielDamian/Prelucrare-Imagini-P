@@ -56,7 +56,7 @@ int similarityIndex(int* sectionValues1,int* sectionValues2) {
 	return sum;
 }
 
-char getCharacterBySectionValues(int* values, int size=62) {
+char getCharacterBySectionValues(int* values, int size=NROFCHARACTERS) {
 
 	char resultedCharacter = characters[0].ch;
 	int min = similarityIndex(values,characters[0].fr);
@@ -357,15 +357,18 @@ void characterDetector(Mat original, Mat output) {
 
 		wordImage = imread(concat);
 
+		cout << "CUVANT"<<endl;
+		imshow("word", wordImage);
+		waitKey(0);
+
 		calculateCharacterValues(wordImage.clone());
 	}
 }
 
 void calculateCharacterValues(Mat img) { // nu uita sa incerci bur, face imaginile mai asemanatoare pentru ca ascunde detaliile
 	Mat imgGray = RGB2GRAY(img);
-
 	threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
-
+	
 	Mat cuvantBordat;
 	copyMakeBorder(imgGray, imgGray, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255, 255, 255));
 	int nrOfCharacters;
@@ -373,14 +376,16 @@ void calculateCharacterValues(Mat img) { // nu uita sa incerci bur, face imagini
 
 	//segmenarea literei
 	for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
-		int xCharacter = characters[characterIndex][0];
-		int yCharacter = characters[characterIndex][1];
-		int wCharacter = characters[characterIndex][3];
-		int hCharacter = characters[characterIndex][2];
+		int xCharacter = characters[characterIndex][0]-1;
+		int yCharacter = characters[characterIndex][1]-1;
+		int wCharacter = characters[characterIndex][3]+2;
+		int hCharacter = characters[characterIndex][2]+2;
 
 		Mat imgCharacter = imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
 		imgCharacter = eliminatePadding(imgCharacter);
 		Mat imgResizedCharacter = resizeTo(imgCharacter, ROWSRESIZE, COLSRESIZE);
+		cv::GaussianBlur(imgResizedCharacter, imgResizedCharacter, cv::Size(3, 3), 0);
+		threshold(imgResizedCharacter, imgResizedCharacter, 0, 255, THRESH_OTSU);
 
 		int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
 		int hRegion = ceil((double)imgResizedCharacter.rows / ROWS);
@@ -399,7 +404,6 @@ void calculateCharacterValues(Mat img) { // nu uita sa incerci bur, face imagini
 			}
 		}
 		//printInFile(sectionValues,ROWS*COLS);
-		
 		// /*
 		cout << "Litera:" << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(sectionValues) << endl;
 		string nume = "char" + to_string(characterIndex);
