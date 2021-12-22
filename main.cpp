@@ -3,11 +3,11 @@
 int main() {
 	cv::Mat img = cv::imread("Images/test1.png");
 	cv::Mat rez = img.clone();
-	//textDetector(img,rez);
-	//btnDetector(img,rez);
-	//checkboxDetector(img, rez);
+	textDetector(img,rez);
+	btnDetector(img,rez);
+	checkboxDetector(img, rez);
 	
-	characterDetector(img,rez);
+	//characterDetector(img,rez);
 	
 	//from unicodes
 	//calculateCharacterValues(img);

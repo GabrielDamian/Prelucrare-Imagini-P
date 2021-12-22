@@ -44,10 +44,10 @@ std::vector<int> blackPixelsOnEachRow(cv::Mat img);
 std::vector<int> blackPixelsOnEachColumn(cv::Mat img);
 int findMostFreqBlackFromHist(std::vector<int> arr, int size);
 
-std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int& OutputNrOfRectagles, int pixelsBetweenBoxes);
+std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetweenBoxes);
 std::vector<int> blackPixelsOnEachColumnWithBorderedRows(cv::Mat img, int y0, int y1, int width);
-std::vector<std::vector<int>> heightCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrixSize, int verificari);
-std::vector<std::vector<int>> widthCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrix_size, int verificari);
+std::vector<std::vector<int>> heightCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int verificari);
+std::vector<std::vector<int>> widthCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int verificari);
 
 void drawReactagles(cv::Mat img, std::vector<std::vector<int>> rectangles, int nrOfRectangles);
 cv::Mat RGB2GRAY(cv::Mat input);

@@ -148,7 +148,7 @@ int automaticThreshold(cv::Mat img) {
 	return findMostFreqBlackFromHist(calculareFrecventa(img),255);
 }
 
-std::vector<std::vector<int>> heightCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrixSize, int verificari = 6)
+std::vector<std::vector<int>> heightCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int verificari = 6)
 {
 	//initalizare matrice auxiliara de rezultate
 	std::vector<std::vector<int>> matrix(size, std::vector<int>(2,0));
@@ -191,12 +191,11 @@ std::vector<std::vector<int>> heightCoordsOfEachTextFoundOnRows(std::vector<int>
 			finalMatrix[i][j] = matrix[i][j];
 		}
 	}
-	matrixSize = marime_matrix;
 
 	return finalMatrix;
 }
 
-std::vector<std::vector<int>> widthCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrix_size, int verificari = 6)
+std::vector<std::vector<int>> widthCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int verificari = 6)
 {
 	//initalizare matrice auxiliara de rezultate
 	std::vector<std::vector<int>> matrix(size, std::vector<int>(2, 0));
@@ -240,7 +239,6 @@ std::vector<std::vector<int>> widthCoordsOfEachTextFoundOnRows(std::vector<int> 
 			finalMatrix[i][j] = matrix[i][j];
 		}
 	}
-	matrix_size = marime_matrix;
 
 	return finalMatrix;
 }
@@ -270,15 +268,14 @@ std::vector<int> blackPixelsOnEachColumnWithBorderedRows(cv::Mat img, int y0, in
 	return frecv;
 }
 
-std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int &OutputNrOfRectagles, int pixelsBetweenBoxes = 6)
+std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetweenBoxes = 6)
 {
 	int width = img.size().width;
 	int height = img.size().height;
 
 	//generare coord y pt text
 	std::vector<int> rowFreq = blackPixelsOnEachRow(img);
-	int nrOfComponentsOnRows;
-	std::vector<std::vector<int>> frecv = heightCoordsOfEachTextFoundOnRows(rowFreq, height, nrOfComponentsOnRows, pixelsBetweenBoxes);
+	std::vector<std::vector<int>> frecv = heightCoordsOfEachTextFoundOnRows(rowFreq, rowFreq.size(), pixelsBetweenBoxes);
 
 	//matrice rezultat (x,y,width, height);
 	std::vector<std::vector<int>> matrix(width * height, std::vector<int>(4, 0));
@@ -286,16 +283,15 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int &OutputNrOfR
 
 	//parcurs std::vector mov
 	int nrOfRectangles=0;
-	for (int i = 0; i < nrOfComponentsOnRows; ++i)
+	for (int i = 0; i < frecv.size(); ++i)
 	{
 		int y0 = frecv[i][0];
 		int y1 = frecv[i][1];
 
 		std::vector<int> frecvBorder = blackPixelsOnEachColumnWithBorderedRows(img, y0, y1, width);
-		int exact_size_width_intervals;
-		std::vector<std::vector<int>> intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, exact_size_width_intervals, pixelsBetweenBoxes);
-		nrOfRectangles += exact_size_width_intervals;
-		for (int j = 0; j < exact_size_width_intervals; ++j)
+		std::vector<std::vector<int>> intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, pixelsBetweenBoxes);
+		nrOfRectangles += intervale_width.size();
+		for (int j = 0; j < intervale_width.size(); ++j)
 		{
 			int x0 = intervale_width[j][0];
 			int x1 = intervale_width[j][1];
@@ -307,7 +303,6 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int &OutputNrOfR
 			k++;
 		}
 	}
-	OutputNrOfRectagles = nrOfRectangles;
 	return matrix;
 }
 
@@ -317,10 +312,9 @@ void characterDetector(cv::Mat original, cv::Mat output) {
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 
-	int nrOfReactangles;
-	std::vector<std::vector<int>> words = generateBoxesForText(imgGray, nrOfReactangles);
+	std::vector<std::vector<int>> words = generateBoxesForText(imgGray);
 
-	for (int wordIndex = 0; wordIndex < nrOfReactangles; ++wordIndex) {
+	for (int wordIndex = 0; wordIndex < words.size(); ++wordIndex) {
 		//segmentarea cuvantului
 		int x = words[wordIndex][0]-2;
 		int y = words[wordIndex][1]-2;
@@ -347,11 +341,10 @@ void calculateCharacterValues(cv::Mat img) { // nu uita sa incerci bur, face ima
 	
 	cv::Mat cuvantBordat;
 	copyMakeBorder(imgGray, imgGray, 5, 5, 5, 5, cv::BORDER_CONSTANT, cv::Scalar(255, 255, 255));
-	int nrOfCharacters;
-	std::vector<std::vector<int>> characters = generateBoxesForText(imgGray, nrOfCharacters, 1);
+	std::vector<std::vector<int>> characters = generateBoxesForText(imgGray, 1);
 
 	//segmenarea literei
-	for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
+	for (int characterIndex = 0; characterIndex < characters.size(); ++characterIndex) {
 		int xCharacter = characters[characterIndex][0]-1;
 		int yCharacter = characters[characterIndex][1]-1;
 		int wCharacter = characters[characterIndex][3]+2;
@@ -398,11 +391,9 @@ void textDetector(cv::Mat original, cv::Mat output) {
 
 	//threshold(imgGray, imgGray, 0, 255, THRESH_BINARY + THRESH_OTSU);
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
-	imshow("Intermediar", imgGray);
 
-	int nrOfReactangles;
-	std::vector<std::vector<int>> rectangles_ = generateBoxesForText(imgGray,nrOfReactangles);
-	drawReactagles(output, rectangles_, nrOfReactangles);
+	std::vector<std::vector<int>> rectangles_ = generateBoxesForText(imgGray);
+	drawReactagles(output, rectangles_, rectangles_.size());
 }
 
 void btnDetector(cv::Mat original, cv::Mat output) {
@@ -442,12 +433,12 @@ void btnDetector(cv::Mat original, cv::Mat output) {
 			if (diferentaLungime > lungimeSus * 0.1 || diferentaLungime > lungimeJos * 0.1) continue; //diferenta prea mare de lungime
 
 		//laturi aprox paralele
-		int inclinareaStangii = abs(ss.x - sj.y);
-		int inclinareaDreptei = abs(ds.x - dj.y);
-		int inclinareaSus = abs(ss.y - ds.y);
-		int inclinareaJos = abs(sj.y - dj.y);
-		int trasholdVertical = lungimeDreapta * 0.05;
-		int trasholdOrizontal = lungimeSus * 0.05;
+		double inclinareaStangii = abs(ss.x - sj.y);
+		double inclinareaDreptei = abs(ds.x - dj.y);
+		double inclinareaSus = abs(ss.y - ds.y);
+		double inclinareaJos = abs(sj.y - dj.y);
+		double trasholdVertical = lungimeDreapta * 0.05;
+		double trasholdOrizontal = lungimeSus * 0.05;
 			if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
 				if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
 					continue;
