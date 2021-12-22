@@ -10,8 +10,6 @@
 #include<opencv2/highgui.hpp>
 #include<opencv2/imgproc.hpp>
 
-using namespace cv;
-using namespace std;
 
 #define ROWS 12
 #define COLS 21
@@ -21,8 +19,9 @@ using namespace std;
 
 struct Character {
 	char ch;
-	int fr[ROWS*COLS] = { 0 };
-	Character(const char ch, int valori[], int marime = ROWS*COLS) {
+	std::vector<int> fr = std::vector<int>(ROWS* COLS,0);
+
+	Character(const char ch, std::vector<int> valori, int marime = ROWS*COLS) {
 		this->ch = ch;
 		for (int i = 0; i < marime; ++i) {
 			this->fr[i] = valori[i];
@@ -31,30 +30,31 @@ struct Character {
 };
 
 template<typename T>
-void printArray(T* array, int size);
-void printMatrix(int** mat, int width, int height);
-void calculateCharacterValues(Mat);
-int similarityIndex(int* sectionValues1, int* sectionValues2);
-char getCharacterBySectionValues(int* values, int size);
-Mat resizeTo(Mat img, uint width, uint height);
+void printArray(std::vector<T> array, int size);
+void printMatrix(std::vector<std::vector<int>> mat, int height, int width);
+void calculateCharacterValues(cv::Mat);
+std::vector<int> calculareFrecventa(cv::Mat img);
+int similarityIndex(std::vector<int> sectionValues1, std::vector<int> sectionValues2);
+char getCharacterBySectionValues(std::vector<int> values, int size);
+cv::Mat resizeTo(cv::Mat img, uint width, uint height);
 
-void aplicareThreshold(Mat img, uint8_t threshold);
-int automaticThreshold(Mat img);
-int* blackPixelsOnEachRow(Mat img);
-int* blackPixelsOnEachColumn(Mat img);
-int findMostFreqBlackFromHist(int* arr, int size);
+void aplicareThreshold(cv::Mat img, uint8_t threshold);
+int automaticThreshold(cv::Mat img);
+std::vector<int> blackPixelsOnEachRow(cv::Mat img);
+std::vector<int> blackPixelsOnEachColumn(cv::Mat img);
+int findMostFreqBlackFromHist(std::vector<int> arr, int size);
 
-int** generateBoxesForText(Mat rez,int &OutputNrOfRectangles, int pixelsBetweenBoxes);
-int* blackPixelsOnEachColumnWithBorderedRows(Mat img, int y0, int y1, int width);
-int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSize, int verificari);
-int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_size,int verificari);
+std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int& OutputNrOfRectagles, int pixelsBetweenBoxes);
+std::vector<int> blackPixelsOnEachColumnWithBorderedRows(cv::Mat img, int y0, int y1, int width);
+std::vector<std::vector<int>> heightCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrixSize, int verificari);
+std::vector<std::vector<int>> widthCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrix_size, int verificari);
 
-void drawReactagles(Mat img, int** rectangles, int nrOfRectangles);
-Mat RGB2GRAY(Mat input);
-void textDetector(Mat original, Mat output);
-void btnDetector(Mat original, Mat output);
-void characterDetector(Mat original, Mat output);
-void checkboxDetector(Mat original, Mat output);
+void drawReactagles(cv::Mat img, std::vector<std::vector<int>> rectangles, int nrOfRectangles);
+cv::Mat RGB2GRAY(cv::Mat input);
+void textDetector(cv::Mat original, cv::Mat output);
+void btnDetector(cv::Mat original, cv::Mat output);
+void characterDetector(cv::Mat original, cv::Mat output);
+void checkboxDetector(cv::Mat original, cv::Mat output);
 
-Mat generateLegendCustom(int w, int h);
-Mat3b ataseazaLegenda(Mat img_rez, int width_legenda);
+cv::Mat generateLegendCustom(int w, int h);
+cv::Mat3b ataseazaLegenda(cv::Mat img_rez, int width_legenda);

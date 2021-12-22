@@ -1,8 +1,7 @@
 #include"Header.h"
 #include "Caractere.h"
 
-template <typename T>
-void printInFile(T* array, int size) {
+void printInFile(std::vector<int> array, int size) {
 	FILE* f;
 	fopen_s(&f, "input.txt", "a");
 	fprintf(f,"Array : ");
@@ -14,15 +13,15 @@ void printInFile(T* array, int size) {
 }
 
 template <typename T>
-void printArray(T* array, int size) {
+void printArray(std::vector<T> array, int size) {
 	printf("Array : ");
 	for (int i = 0; i < size; ++i) {
-		cout << array[i] << " ";
+		std::cout << array[i] << " ";
 	}
 	printf("\n");
 }
 
-void printMatrix(int** mat, int height, int width) {
+void printMatrix(std::vector<std::vector<int>> mat, int height, int width) {
 	for (int i = 0; i < height; ++i)
 	{
 		for (int j = 0; j < width; ++j)
@@ -33,22 +32,22 @@ void printMatrix(int** mat, int height, int width) {
 	}
 }
 
-Mat resizeTo(Mat img, uint width, uint height) {
-	Mat rez;
-	resize(img, rez, Size(width, height), INTER_CUBIC);
+cv::Mat resizeTo(cv::Mat img, uint width, uint height) {
+	cv::Mat rez;
+	resize(img, rez, cv::Size(width, height), cv::INTER_CUBIC);
 	return rez;
 }
 
-Mat eliminatePadding(Mat img) {
+cv::Mat eliminatePadding(cv::Mat img) {
 	std::transform(img.begin<uint8_t>(), img.end<uint8_t>(), img.begin<uint8_t>(), [](uint8_t p) {return (uint8_t)(255 - p); });
-	Mat nonZeroCoords;
+	cv::Mat nonZeroCoords;
 	findNonZero(img, nonZeroCoords);
-	Mat output = img(boundingRect(nonZeroCoords)).clone();
+	cv::Mat output = img(boundingRect(nonZeroCoords)).clone();
 	std::transform(output.begin<uint8_t>(), output.end<uint8_t>(), output.begin<uint8_t>(), [](uint8_t p) {return (uint8_t)(255 - p); });
 	return output;
 }
 
-int similarityIndex(int* sectionValues1,int* sectionValues2) {
+int similarityIndex(std::vector<int> sectionValues1,std::vector<int> sectionValues2) {
 	int sum = 0;
 	for (int i = 0; i < ROWS*COLS; ++i) {
 		sum += abs(sectionValues1[i] - sectionValues2[i]) ;
@@ -56,7 +55,7 @@ int similarityIndex(int* sectionValues1,int* sectionValues2) {
 	return sum;
 }
 
-char getCharacterBySectionValues(int* values, int size=NROFCHARACTERS) {
+char getCharacterBySectionValues(std::vector<int> values, int size=NROFCHARACTERS) {
 
 	char resultedCharacter = characters[0].ch;
 	int min = similarityIndex(values,characters[0].fr);
@@ -70,7 +69,7 @@ char getCharacterBySectionValues(int* values, int size=NROFCHARACTERS) {
 	return resultedCharacter;
 }
 
-int findMostFreqBlackFromHist(int* arr, int size) {
+int findMostFreqBlackFromHist(std::vector<int> arr, int size) {
 	//Merg pana la size/3 pentru ca in acel range sunt culorile de negru
 	int val = arr[0];
 	int pos = 0;
@@ -83,41 +82,42 @@ int findMostFreqBlackFromHist(int* arr, int size) {
 	return pos;
 }
 
-Mat RGB2GRAY(Mat input) {
+cv::Mat RGB2GRAY(cv::Mat input) {
 	int width = input.size().width;
 	int height = input.size().height;
-	Mat rez(height, width, CV_8UC1, Scalar(0,0,0));
+	cv::Mat rez(height, width, CV_8UC1, cv::Scalar(0,0,0));
 
 	for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {
-			Vec3b pixelRGB = input.at<Vec3b>(i, j);
+			cv::Vec3b pixelRGB = input.at<cv::Vec3b>(i, j);
 			rez.at<uint8_t>(i, j) =  0.299 * pixelRGB[0] + 0.587 * pixelRGB[1] + 0.114 * pixelRGB[2];
 		}
 	}
 	return rez;
 }
 
-int* calculareFrecventa(Mat img) {
-	int width = img.size().width;
-	int height = img.size().height;
-	int* result = new int[255]{ 0 };
+std::vector<int> calculareFrecventa(cv::Mat img) {
+	std::vector<int> result(256, 0);
 
-	for (int i = 0; i < height; ++i)
-		for (int j = 0; j < width; ++j)
-			result[img.at<uint8_t>(i,j)] ++;
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			auto pixel = img.at<uint8_t>(i, j);
+			result[pixel] ++;
+		}
+	}
 
 	return result;
 }
 
-void aplicareThreshold(Mat img, uint8_t threshold) {
+void aplicareThreshold(cv::Mat img, uint8_t threshold) {
 	std::transform(img.begin<uint8_t>(), img.end<uint8_t>(), img.begin<uint8_t>(),
 		[threshold](uint8_t px) {return (uint8_t)(px > threshold ? 255 : 0); });
 }
 
-int* blackPixelsOnEachRow(Mat img) {
+std::vector<int> blackPixelsOnEachRow(cv::Mat img) {
 	int width = img.cols;
 	int height = img.rows;
-	int* v = new int[height] {0};
+	std::vector<int> v(height, 0);
 	
 	for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {
@@ -129,10 +129,10 @@ int* blackPixelsOnEachRow(Mat img) {
 	return v;
 }
 
-int* blackPixelsOnEachColumn(Mat img) {
+std::vector<int> blackPixelsOnEachColumn(cv::Mat img) {
 	int width = img.size().width;
 	int height = img.size().height;
-	int* v = new int[width] {0};
+	std::vector<int> v(width, 0);
 
 	for (int i = 0; i < width; ++i) {
 		for (int j = 0; j < height; ++j) {
@@ -144,18 +144,15 @@ int* blackPixelsOnEachColumn(Mat img) {
 	return v;
 }
 
-int automaticThreshold(Mat img) {
+int automaticThreshold(cv::Mat img) {
 	return findMostFreqBlackFromHist(calculareFrecventa(img),255);
 }
 
-int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSize, int verificari = 6)
+std::vector<std::vector<int>> heightCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrixSize, int verificari = 6)
 {
 	//initalizare matrice auxiliara de rezultate
-	int** matrix = new int* [size];
-	for (int i = 0; i < size; ++i)
-		matrix[i] = new int[2];
+	std::vector<std::vector<int>> matrix(size, std::vector<int>(2,0));
 	int k_matrix = 0;
-
 	int marime_matrix = 0; // la aflarea marimii reale a matricii rezultat
 
 	//calculare valori
@@ -177,16 +174,14 @@ int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSi
 			int i_finish = i + component_height;
 			i = i_finish;
 
-			int* temp = new int[2]{ i_start,i_finish };
+			std::vector<int> temp{ i_start,i_finish };
 			matrix[k_matrix++] = temp;
 			marime_matrix++;
 		}
 	}
 
 	//init matrice finala de valori
-	int** finalMatrix = new int* [marime_matrix];
-	for (int i = 0; i < marime_matrix; ++i)
-		finalMatrix[i] = new int[2];
+	std::vector<std::vector<int>> finalMatrix(marime_matrix, std::vector<int>(2, 0));
 
 	//copiere din matricea aux in cea finala
 	for (int i = 0; i < marime_matrix; ++i)
@@ -198,23 +193,14 @@ int** heightCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrixSi
 	}
 	matrixSize = marime_matrix;
 
-	//dealocare matrice aux
-	for (int i = 0; i < size; ++i) {
-		delete[] matrix[i];
-	}
-	delete[] matrix;
-
 	return finalMatrix;
 }
 
-int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_size, int verificari = 6)
+std::vector<std::vector<int>> widthCoordsOfEachTextFoundOnRows(std::vector<int> heightFrec, int size, int& matrix_size, int verificari = 6)
 {
 	//initalizare matrice auxiliara de rezultate
-	int** matrix = new int* [size];
-	for (int i = 0; i < size; ++i)
-		matrix[i] = new int[2];
+	std::vector<std::vector<int>> matrix(size, std::vector<int>(2, 0));
 	int k_matrix = 0;
-
 	int marime_matrix = 0; // la aflarea marimii reale a matricii rezultat
 
 	for (int i = 0; i < size; ++i)
@@ -237,47 +223,39 @@ int** widthCoordsOfEachTextFoundOnRows(int* heightFrec, int size, int& matrix_si
 			int i_finish = i + l;
 			i = i_finish;
 
-			int* temp = new int[2]{ i_start,i_finish };
+			std::vector<int> temp{ i_start,i_finish };
 			matrix[k_matrix++] = temp;
 			marime_matrix++;
 		}
 	}
 
 	//init matrice finala de valori
-	int** final_matrix = new int* [marime_matrix];
-	for (int i = 0; i < marime_matrix; ++i)
-		final_matrix[i] = new int[2];
+	std::vector<std::vector<int>> finalMatrix(marime_matrix, std::vector<int>(2, 0));
 
 	//copiere din matricea aux in cea finala
 	for (int i = 0; i < marime_matrix; ++i)
 	{
 		for (int j = 0; j < 2; j++)
 		{
-			final_matrix[i][j] = matrix[i][j];
+			finalMatrix[i][j] = matrix[i][j];
 		}
 	}
 	matrix_size = marime_matrix;
 
-	//dealocare matrice aux
-	for (int i = 0; i < size; ++i) {
-		delete[] matrix[i];
-	}
-	delete[] matrix;
-
-	return final_matrix;
+	return finalMatrix;
 }
 
-void drawReactagles(Mat img, int** rectangles, int nrOfRectangles) {
+void drawReactagles(cv::Mat img, std::vector<std::vector<int>> rectangles, int nrOfRectangles) {
 	for (int i = 0; i < nrOfRectangles; ++i)
 	{
-		Rect r = Rect(rectangles[i][0]-2, rectangles[i][1]-2, rectangles[i][3]+4, rectangles[1][2]+4);
-		cv::rectangle(img, r, Scalar(0, 0, 255), 1);
+		cv::Rect r = cv::Rect(rectangles[i][0]-2, rectangles[i][1]-2, rectangles[i][3]+4, rectangles[1][2]+4);
+		cv::rectangle(img, r, cv::Scalar(0, 0, 255), 1);
 	}
 }
 
-int* blackPixelsOnEachColumnWithBorderedRows(Mat img, int y0, int y1, int width)
+std::vector<int> blackPixelsOnEachColumnWithBorderedRows(cv::Mat img, int y0, int y1, int width)
 {
-	int* frecv = new int[width] {0};
+	std::vector<int> frecv(width, 0);
 
 	for (int i = 0; i < width; ++i)
 	{
@@ -292,32 +270,30 @@ int* blackPixelsOnEachColumnWithBorderedRows(Mat img, int y0, int y1, int width)
 	return frecv;
 }
 
-int** generateBoxesForText(Mat img, int &OutputNrOfRectagles, int pixelsBetweenBoxes = 6)
+std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int &OutputNrOfRectagles, int pixelsBetweenBoxes = 6)
 {
 	int width = img.size().width;
 	int height = img.size().height;
 
 	//generare coord y pt text
-	int* rowFreq = blackPixelsOnEachRow(img);
+	std::vector<int> rowFreq = blackPixelsOnEachRow(img);
 	int nrOfComponentsOnRows;
-	int** frecv = heightCoordsOfEachTextFoundOnRows(rowFreq, height, nrOfComponentsOnRows, pixelsBetweenBoxes);
+	std::vector<std::vector<int>> frecv = heightCoordsOfEachTextFoundOnRows(rowFreq, height, nrOfComponentsOnRows, pixelsBetweenBoxes);
 
 	//matrice rezultat (x,y,width, height);
-	int** matrix = new int* [width * height];
+	std::vector<std::vector<int>> matrix(width * height, std::vector<int>(4, 0));
 	int k = 0;
-	for (int i = 0; i < width * height; ++i)
-		matrix[i] = new int[4];
 
-	//parcurs vector mov
+	//parcurs std::vector mov
 	int nrOfRectangles=0;
 	for (int i = 0; i < nrOfComponentsOnRows; ++i)
 	{
 		int y0 = frecv[i][0];
 		int y1 = frecv[i][1];
 
-		int* frecvBorder = blackPixelsOnEachColumnWithBorderedRows(img, y0, y1, width);
+		std::vector<int> frecvBorder = blackPixelsOnEachColumnWithBorderedRows(img, y0, y1, width);
 		int exact_size_width_intervals;
-		int** intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, exact_size_width_intervals, pixelsBetweenBoxes);
+		std::vector<std::vector<int>> intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, exact_size_width_intervals, pixelsBetweenBoxes);
 		nrOfRectangles += exact_size_width_intervals;
 		for (int j = 0; j < exact_size_width_intervals; ++j)
 		{
@@ -335,14 +311,14 @@ int** generateBoxesForText(Mat img, int &OutputNrOfRectagles, int pixelsBetweenB
 	return matrix;
 }
 
-void characterDetector(Mat original, Mat output) {
-	Mat img = original.clone();
-	Mat imgGray = RGB2GRAY(img);
+void characterDetector(cv::Mat original, cv::Mat output) {
+	cv::Mat img = original.clone();
+	cv::Mat imgGray = RGB2GRAY(img);
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 
 	int nrOfReactangles;
-	int** words = generateBoxesForText(imgGray, nrOfReactangles);
+	std::vector<std::vector<int>> words = generateBoxesForText(imgGray, nrOfReactangles);
 
 	for (int wordIndex = 0; wordIndex < nrOfReactangles; ++wordIndex) {
 		//segmentarea cuvantului
@@ -351,28 +327,28 @@ void characterDetector(Mat original, Mat output) {
 		int w = words[wordIndex][3]+2;
 		int h = words[wordIndex][2]+2;
 
-		Mat wordImage = img(Rect(x, y, w, h));
+		cv::Mat wordImage = img(cv::Rect(x, y, w, h));
 		string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
 		imwrite(concat, wordImage);
 
-		wordImage = imread(concat);
+		wordImage = cv::imread(concat);
 
 		cout << "CUVANT"<<endl;
 		imshow("word", wordImage);
-		waitKey(0);
+		cv::waitKey(0);
 
 		calculateCharacterValues(wordImage.clone());
 	}
 }
 
-void calculateCharacterValues(Mat img) { // nu uita sa incerci bur, face imaginile mai asemanatoare pentru ca ascunde detaliile
-	Mat imgGray = RGB2GRAY(img);
-	threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
+void calculateCharacterValues(cv::Mat img) { // nu uita sa incerci bur, face imaginile mai asemanatoare pentru ca ascunde detaliile
+	cv::Mat imgGray = RGB2GRAY(img);
+	threshold(imgGray, imgGray, 0, 255, cv::THRESH_OTSU);
 	
-	Mat cuvantBordat;
-	copyMakeBorder(imgGray, imgGray, 5, 5, 5, 5, BORDER_CONSTANT, Scalar(255, 255, 255));
+	cv::Mat cuvantBordat;
+	copyMakeBorder(imgGray, imgGray, 5, 5, 5, 5, cv::BORDER_CONSTANT, cv::Scalar(255, 255, 255));
 	int nrOfCharacters;
-	int** characters = generateBoxesForText(imgGray, nrOfCharacters, 1);
+	std::vector<std::vector<int>> characters = generateBoxesForText(imgGray, nrOfCharacters, 1);
 
 	//segmenarea literei
 	for (int characterIndex = 0; characterIndex < nrOfCharacters; ++characterIndex) {
@@ -381,16 +357,16 @@ void calculateCharacterValues(Mat img) { // nu uita sa incerci bur, face imagini
 		int wCharacter = characters[characterIndex][3]+2;
 		int hCharacter = characters[characterIndex][2]+2;
 
-		Mat imgCharacter = imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
+		cv::Mat imgCharacter = imgGray(cv::Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
 		imgCharacter = eliminatePadding(imgCharacter);
-		Mat imgResizedCharacter = resizeTo(imgCharacter, ROWSRESIZE, COLSRESIZE);
+		cv::Mat imgResizedCharacter = resizeTo(imgCharacter, ROWSRESIZE, COLSRESIZE);
 		cv::GaussianBlur(imgResizedCharacter, imgResizedCharacter, cv::Size(3, 3), 0);
-		threshold(imgResizedCharacter, imgResizedCharacter, 0, 255, THRESH_OTSU);
+		threshold(imgResizedCharacter, imgResizedCharacter, 0, 255, cv::THRESH_OTSU);
 
 		int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
 		int hRegion = ceil((double)imgResizedCharacter.rows / ROWS);
 
-		int* sectionValues = new int[ROWS * COLS]{ 0 };
+		std::vector<int> sectionValues(ROWS * COLS, 0 );
 		
 		for (int rowIndexPixel = 0; rowIndexPixel < imgResizedCharacter.rows ; ++rowIndexPixel) {
 			for (int columnIndexPixel = 0; columnIndexPixel < imgResizedCharacter.cols ; ++columnIndexPixel) {
@@ -409,55 +385,50 @@ void calculateCharacterValues(Mat img) { // nu uita sa incerci bur, face imagini
 		string nume = "char" + to_string(characterIndex);
 		imshow(nume, imgCharacter);
 		imshow(nume + "resized", imgResizedCharacter);
-		waitKey(0);
-		destroyAllWindows();
+		cv::waitKey(0);
+		cv::destroyAllWindows();
 		// */
 	}
 }
 
-void textDetector(Mat original, Mat output) {
+void textDetector(cv::Mat original, cv::Mat output) {
 
-	Mat img = original.clone();
-	Mat imgGray = RGB2GRAY(img);
+	cv::Mat img = original.clone();
+	cv::Mat imgGray = RGB2GRAY(img);
 
 	//threshold(imgGray, imgGray, 0, 255, THRESH_BINARY + THRESH_OTSU);
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 	imshow("Intermediar", imgGray);
 
 	int nrOfReactangles;
-	int** rectangles_ = generateBoxesForText(imgGray,nrOfReactangles);
+	std::vector<std::vector<int>> rectangles_ = generateBoxesForText(imgGray,nrOfReactangles);
 	drawReactagles(output, rectangles_, nrOfReactangles);
-
-	for (int i = 0; i < nrOfReactangles * 4; ++i) {
-		free(rectangles_[i]);
-	}
-	free(rectangles_);
 }
 
-void btnDetector(Mat original, Mat output) {
-	Mat img = original.clone(), imgBlur, imgCanny, imgDil;
+void btnDetector(cv::Mat original, cv::Mat output) {
+	cv::Mat img = original.clone(), imgBlur, imgCanny, imgDil;
 
 	//preprocesare
-	GaussianBlur(img, imgBlur, Size(3, 3), 3, 0);
+	GaussianBlur(img, imgBlur, cv::Size(3, 3), 3, 0);
 	Canny(imgBlur, imgCanny, 25, 75);
-	dilate(imgCanny, imgDil, getStructuringElement(MORPH_RECT, Size(3, 3)));
+	dilate(imgCanny, imgDil, getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)));
 
 	//procesare
-	vector<vector<Point> > contours;
-	vector<Vec4i> hierarchy;
-	findContours(imgDil, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE); //gaseste contururi
+	std::vector<std::vector<cv::Point> > contours;
+	std::vector<cv::Vec4i> hierarchy;
+	findContours(imgDil, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE); //gaseste contururi
 
 	for (int i = 0; i < contours.size(); ++i) {
-		vector<vector<Point>> poligoane(contours.size());
+		std::vector<std::vector<cv::Point>> poligoane(contours.size());
 		approxPolyDP(contours[i], poligoane[i], 0.02 * arcLength(contours[i], true), true); //generare poligoane
 
 		if (!(contourArea(contours[i], true) > 500 && poligoane[i].size() == 4)) continue; //eliminare trash
 
 		//coordonate puncte si lungime laturi
-		Point ss = Point(poligoane[i][0].x, poligoane[i][0].y);
-		Point ds = Point(poligoane[i][1].x, poligoane[i][1].y);
-		Point dj = Point(poligoane[i][2].x, poligoane[i][2].y);
-		Point sj = Point(poligoane[i][3].x, poligoane[i][3].y);
+		cv::Point ss = cv::Point(poligoane[i][0].x, poligoane[i][0].y);
+		cv::Point ds = cv::Point(poligoane[i][1].x, poligoane[i][1].y);
+		cv::Point dj = cv::Point(poligoane[i][2].x, poligoane[i][2].y);
+		cv::Point sj = cv::Point(poligoane[i][3].x, poligoane[i][3].y);
 		int lungimeStanga = sj.y - ss.y;
 		int lungimeSus = ds.x - ss.x;
 		int lungimeDreapta = dj.y - ds.y;
@@ -483,32 +454,32 @@ void btnDetector(Mat original, Mat output) {
 
 		if (lungimeSus > img.cols * 0.35 || lungimeStanga > img.rows * 0.2) continue;
 
-		drawContours(output, poligoane, i, Scalar(0, 255, 0), 2);
+		drawContours(output, poligoane, i, cv::Scalar(0, 255, 0), 2);
 	}
 }
 
-void checkboxDetector(Mat original, Mat output) {
-	Mat img = original.clone(), imgCanny, imgDil;
+void checkboxDetector(cv::Mat original, cv::Mat output) {
+	cv::Mat img = original.clone(), imgCanny, imgDil;
 
 	Canny(img, imgCanny, 25, 75);
-	dilate(imgCanny, imgDil, getStructuringElement(MORPH_RECT, Size(2, 2)));
+	dilate(imgCanny, imgDil, getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2)));
 
 	//procesare
-	vector<vector<Point> > contours;
-	vector<Vec4i> hierarchy;
-	findContours(imgCanny, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE); //gaseste contururi
+	std::vector<std::vector<cv::Point> > contours;
+	std::vector<cv::Vec4i> hierarchy;
+	findContours(imgCanny, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE); //gaseste contururi
 
 	for (int i = 0; i < contours.size(); ++i) {
-		vector<vector<Point>> poligoane(contours.size());
+		std::vector<std::vector<cv::Point>> poligoane(contours.size());
 		approxPolyDP(contours[i], poligoane[i], 0.02 * arcLength(contours[i], true), true); //generare poligoane
 
 		if (!(contourArea(contours[i], true) > 100 && poligoane[i].size() == 4)) continue; //eliminare trash
 
 		//coordonate puncte si lungime laturi
-		Point ss = Point(poligoane[i][0].x, poligoane[i][0].y);
-		Point ds = Point(poligoane[i][1].x, poligoane[i][1].y);
-		Point dj = Point(poligoane[i][2].x, poligoane[i][2].y);
-		Point sj = Point(poligoane[i][3].x, poligoane[i][3].y);
+		cv::Point ss = cv::Point(poligoane[i][0].x, poligoane[i][0].y);
+		cv::Point ds = cv::Point(poligoane[i][1].x, poligoane[i][1].y);
+		cv::Point dj = cv::Point(poligoane[i][2].x, poligoane[i][2].y);
+		cv::Point sj = cv::Point(poligoane[i][3].x, poligoane[i][3].y);
 		int lungimeStanga = sj.y - ss.y;
 		int lungimeSus = ds.x - ss.x;
 		int lungimeDreapta = dj.y - ds.y;
@@ -529,36 +500,36 @@ void checkboxDetector(Mat original, Mat output) {
 		if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
 			if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
 				continue;
-		drawContours(output, poligoane, i, Scalar(0, 0, 0), 2);
+		drawContours(output, poligoane, i, cv::Scalar(0, 0, 0), 2);
 	}
 }
 
-Mat generateLegendCustom(int w, int h)
+cv::Mat generateLegendCustom(int w, int h)
 {
-	Mat img(w, h, CV_8UC3, Scalar(255, 255,255));
+	cv::Mat img(w, h, CV_8UC3, cv::Scalar(255, 255,255));
 	if (img.empty()) {
 		cout << "Could not load image" << endl;
 	}
 
-	Rect r = Rect(180,20,50,30);
-	rectangle(img, r, Scalar(0, 0, 255), 2);
+	cv::Rect r = cv::Rect(180,20,50,30);
+	rectangle(img, r, cv::Scalar(0, 0, 255), 2);
 	putText(img, "Text", cv::Point(50, 43), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 1, false);
 
-	Rect r_2 = Rect(180, 80, 50, 30);
-	rectangle(img, r_2, Scalar(66, 245, 66), 2);
+	cv::Rect r_2 = cv::Rect(180, 80, 50, 30);
+	rectangle(img, r_2, cv::Scalar(66, 245, 66), 2);
 	putText(img, "Buton", cv::Point(50, 105), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 1, false);
 
 	return img;
 }
 
-Mat3b ataseazaLegenda(Mat rez, int width_legenda)
+cv::Mat3b ataseazaLegenda(cv::Mat rez, int width_legenda)
 {
 	//width_leganda = 280
-	Mat legenda = generateLegendCustom(rez.rows, width_legenda);
-	Mat3b final(rez.rows, rez.cols + legenda.cols, Vec3b(0, 0, 0));
+	cv::Mat legenda = generateLegendCustom(rez.rows, width_legenda);
+	cv::Mat3b final(rez.rows, rez.cols + legenda.cols, cv::Vec3b(0, 0, 0));
 
-	rez.copyTo(final(Rect(0, 0, rez.cols, rez.rows)));
-	legenda.copyTo(final(Rect(rez.cols, 0, legenda.cols, legenda.rows)));
+	rez.copyTo(final(cv::Rect(0, 0, rez.cols, rez.rows)));
+	legenda.copyTo(final(cv::Rect(rez.cols, 0, legenda.cols, legenda.rows)));
 	
 	return final;
 }	
