@@ -13,8 +13,10 @@
 using namespace cv;
 using namespace std;
 
-#define ROWS 10
-#define COLS 20
+#define ROWS 12
+#define COLS 21
+#define ROWSRESIZE 12
+#define COLSRESIZE 21
 
 struct Character {
 	char ch;

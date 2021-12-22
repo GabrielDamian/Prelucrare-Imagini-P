@@ -35,7 +35,7 @@ void printMatrix(int** mat, int height, int width) {
 
 Mat resizeTo(Mat img, uint width, uint height) {
 	Mat rez;
-	resize(img, rez, Size(width, height), INTER_LINEAR);
+	resize(img, rez, Size(width, height), INTER_CUBIC);
 	return rez;
 }
 
@@ -49,7 +49,7 @@ Mat eliminatePadding(Mat img) {
 }
 
 int similarityIndex(int* sectionValues1,int* sectionValues2) {
-	double sum = 0;
+	int sum = 0;
 	for (int i = 0; i < ROWS*COLS; ++i) {
 		sum += abs(sectionValues1[i] - sectionValues2[i]) ;
 	}
@@ -341,15 +341,15 @@ void characterDetector(Mat original, Mat output) {
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 
-	int nrOfReactangles = 0;
-	int** words = generateBoxesForText(imgGray, nrOfReactangles, 4);
-	
+	int nrOfReactangles;
+	int** words = generateBoxesForText(imgGray, nrOfReactangles);
+
 	for (int wordIndex = 0; wordIndex < nrOfReactangles; ++wordIndex) {
 		//segmentarea cuvantului
-		int x = words[wordIndex][0];
-		int y = words[wordIndex][1];
-		int w = words[wordIndex][3];
-		int h = words[wordIndex][2];
+		int x = words[wordIndex][0]-2;
+		int y = words[wordIndex][1]-2;
+		int w = words[wordIndex][3]+2;
+		int h = words[wordIndex][2]+2;
 
 		Mat wordImage = img(Rect(x, y, w, h));
 		string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
@@ -361,7 +361,7 @@ void characterDetector(Mat original, Mat output) {
 	}
 }
 
-void calculateCharacterValues(Mat img) {
+void calculateCharacterValues(Mat img) { // nu uita sa incerci bur, face imaginile mai asemanatoare pentru ca ascunde detaliile
 	Mat imgGray = RGB2GRAY(img);
 
 	threshold(imgGray, imgGray, 0, 255, THRESH_OTSU);
@@ -380,7 +380,7 @@ void calculateCharacterValues(Mat img) {
 
 		Mat imgCharacter = imgGray(Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
 		imgCharacter = eliminatePadding(imgCharacter);
-		Mat imgResizedCharacter = resizeTo(imgCharacter, 10, 20);
+		Mat imgResizedCharacter = resizeTo(imgCharacter, ROWSRESIZE, COLSRESIZE);
 
 		int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
 		int hRegion = ceil((double)imgResizedCharacter.rows / ROWS);
@@ -400,12 +400,14 @@ void calculateCharacterValues(Mat img) {
 		}
 		//printInFile(sectionValues,ROWS*COLS);
 		
+		// /*
 		cout << "Litera:" << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(sectionValues) << endl;
 		string nume = "char" + to_string(characterIndex);
 		imshow(nume, imgCharacter);
 		imshow(nume + "resized", imgResizedCharacter);
 		waitKey(0);
 		destroyAllWindows();
+		// */
 	}
 }
 

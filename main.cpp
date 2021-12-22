@@ -1,13 +1,13 @@
 #include"Header.h"
 
 int main() {
-	Mat img = imread("Images/unicode.png");
+	Mat img = imread("Images/test1.png");
 	Mat rez = img.clone();
-	textDetector(img,rez);
-	btnDetector(img,rez);
-	checkboxDetector(img, rez);
+	//textDetector(img,rez);
+	//btnDetector(img,rez);
+	//checkboxDetector(img, rez);
 	
-	//characterDetector(img,rez);
+	characterDetector(img,rez);
 	
 	//from unicodes
 	//calculateCharacterValues(img);
