@@ -39,11 +39,19 @@ cv::Mat resizeTo(cv::Mat img, uint width, uint height) {
 }
 
 cv::Mat eliminatePadding(cv::Mat img) {
-	std::transform(img.begin<uint8_t>(), img.end<uint8_t>(), img.begin<uint8_t>(), [](uint8_t p) {return (uint8_t)(255 - p); });
-	cv::Mat nonZeroCoords;
-	findNonZero(img, nonZeroCoords);
-	cv::Mat output = img(boundingRect(nonZeroCoords)).clone();
+	cv::Mat output(img);
+
 	std::transform(output.begin<uint8_t>(), output.end<uint8_t>(), output.begin<uint8_t>(), [](uint8_t p) {return (uint8_t)(255 - p); });
+	cv::Mat nonZeroCoords;
+	findNonZero(output, nonZeroCoords);
+	cv::Rect boundsWithNonZeroElems = boundingRect(nonZeroCoords);
+
+	if (boundsWithNonZeroElems.width && boundsWithNonZeroElems.height) {
+		output = img(boundsWithNonZeroElems).clone();
+	}
+
+	std::transform(output.begin<uint8_t>(), output.end<uint8_t>(), output.begin<uint8_t>(), [](uint8_t p) {return (uint8_t)(255 - p); });
+	
 	return output;
 }
 
@@ -275,10 +283,10 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetwee
 
 	//generare coord y pt text
 	std::vector<int> rowFreq = blackPixelsOnEachRow(img);
-	std::vector<std::vector<int>> frecv = heightCoordsOfEachTextFoundOnRows(rowFreq, rowFreq.size(), pixelsBetweenBoxes);
+	std::vector<std::vector<int>> frecv = heightCoordsOfEachTextFoundOnRows(rowFreq, height, pixelsBetweenBoxes);
 
 	//matrice rezultat (x,y,width, height);
-	std::vector<std::vector<int>> matrix(width * height, std::vector<int>(4, 0));
+	std::vector<std::vector<int>> matrix(width*height/10, std::vector<int>(4, 0));
 	int k = 0;
 
 	//parcurs std::vector mov
@@ -291,6 +299,7 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetwee
 		std::vector<int> frecvBorder = blackPixelsOnEachColumnWithBorderedRows(img, y0, y1, width);
 		std::vector<std::vector<int>> intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, pixelsBetweenBoxes);
 		nrOfRectangles += intervale_width.size();
+
 		for (int j = 0; j < intervale_width.size(); ++j)
 		{
 			int x0 = intervale_width[j][0];
@@ -303,40 +312,40 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetwee
 			k++;
 		}
 	}
+	matrix.resize(nrOfRectangles);
 	return matrix;
 }
 
-void characterDetector(cv::Mat original, cv::Mat output) {
+std::map<std::string, std::vector<int>> characterDetector(cv::Mat original) {
 	cv::Mat img = original.clone();
 	cv::Mat imgGray = RGB2GRAY(img);
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 
+	std::map<std::string, vector<int>> text;
 	std::vector<std::vector<int>> words = generateBoxesForText(imgGray);
 
 	for (int wordIndex = 0; wordIndex < words.size(); ++wordIndex) {
 		//segmentarea cuvantului
-		int x = words[wordIndex][0]-2;
-		int y = words[wordIndex][1]-2;
+		int x = (words[wordIndex][0]-2) < 0 ? words[wordIndex][0] : words[wordIndex][0] - 2;
+		int y = (words[wordIndex][1] - 2) < 0 ? words[wordIndex][1] : words[wordIndex][1] - 2;
 		int w = words[wordIndex][3]+2;
 		int h = words[wordIndex][2]+2;
 
 		cv::Mat wordImage = img(cv::Rect(x, y, w, h));
 		string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
 		imwrite(concat, wordImage);
-
 		wordImage = cv::imread(concat);
 
-		cout << "CUVANT"<<endl;
-		imshow("word", wordImage);
-		cv::waitKey(0);
-
-		calculateCharacterValues(wordImage.clone());
+		std::string wordString = calculateCharacterValues(wordImage.clone());
+		text.insert(std::make_pair(wordString, vector<int>{ x, y, w, h }));
 	}
+	return text;
 }
 
-void calculateCharacterValues(cv::Mat img) { // nu uita sa incerci bur, face imaginile mai asemanatoare pentru ca ascunde detaliile
-	cv::Mat imgGray = RGB2GRAY(img);
+std::string calculateCharacterValues(cv::Mat wordImage) { 
+	std::string wordString = "";
+	cv::Mat imgGray = RGB2GRAY(wordImage);
 	threshold(imgGray, imgGray, 0, 255, cv::THRESH_OTSU);
 	
 	cv::Mat cuvantBordat;
@@ -345,8 +354,8 @@ void calculateCharacterValues(cv::Mat img) { // nu uita sa incerci bur, face ima
 
 	//segmenarea literei
 	for (int characterIndex = 0; characterIndex < characters.size(); ++characterIndex) {
-		int xCharacter = characters[characterIndex][0]-1;
-		int yCharacter = characters[characterIndex][1]-1;
+		int xCharacter = (characters[characterIndex][0] - 1) == -1 ? characters[characterIndex][0]+1 : characters[characterIndex][0] - 1;
+		int yCharacter = (characters[characterIndex][1] - 1) == -1 ? characters[characterIndex][1]+1 : characters[characterIndex][1] - 2;
 		int wCharacter = characters[characterIndex][3]+2;
 		int hCharacter = characters[characterIndex][2]+2;
 
@@ -373,15 +382,9 @@ void calculateCharacterValues(cv::Mat img) { // nu uita sa incerci bur, face ima
 			}
 		}
 		//printInFile(sectionValues,ROWS*COLS);
-		// /*
-		cout << "Litera:" << getCharacterBySectionValues(sectionValues) << " $$$$$$$$$$$$ " << getCharacterBySectionValues(sectionValues) << endl;
-		string nume = "char" + to_string(characterIndex);
-		imshow(nume, imgCharacter);
-		imshow(nume + "resized", imgResizedCharacter);
-		cv::waitKey(0);
-		cv::destroyAllWindows();
-		// */
+		wordString += getCharacterBySectionValues(sectionValues);
 	}
+	return wordString;
 }
 
 void textDetector(cv::Mat original, cv::Mat output) {
@@ -396,8 +399,9 @@ void textDetector(cv::Mat original, cv::Mat output) {
 	drawReactagles(output, rectangles_, rectangles_.size());
 }
 
-void btnDetector(cv::Mat original, cv::Mat output) {
+std::list<std::vector<int>> btnDetector(cv::Mat original, cv::Mat output) {
 	cv::Mat img = original.clone(), imgBlur, imgCanny, imgDil;
+	std::list<std::vector<int>> btnList;
 
 	//preprocesare
 	GaussianBlur(img, imgBlur, cv::Size(3, 3), 3, 0);
@@ -446,11 +450,14 @@ void btnDetector(cv::Mat original, cv::Mat output) {
 		if (lungimeSus > img.cols * 0.35 || lungimeStanga > img.rows * 0.2) continue;
 
 		drawContours(output, poligoane, i, cv::Scalar(0, 255, 0), 2);
+		btnList.push_back(std::vector<int>{ss.x, ss.y, lungimeSus, lungimeStanga}); //x,y,w,h
 	}
+	return btnList;
 }
 
-void checkboxDetector(cv::Mat original, cv::Mat output) {
+std::list<std::vector<int>> checkboxDetector(cv::Mat original, cv::Mat output) {
 	cv::Mat img = original.clone(), imgCanny, imgDil;
+	std::list<std::vector<int>> checkBoxList;
 
 	Canny(img, imgCanny, 25, 75);
 	dilate(imgCanny, imgDil, getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2)));
@@ -491,8 +498,11 @@ void checkboxDetector(cv::Mat original, cv::Mat output) {
 		if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
 			if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
 				continue;
+
 		drawContours(output, poligoane, i, cv::Scalar(0, 0, 0), 2);
+		checkBoxList.push_back(std::vector<int>{ss.x, ss.y, lungimeSus, lungimeStanga}); //x,y,w,h
 	}
+	return checkBoxList;
 }
 
 cv::Mat generateLegendCustom(int w, int h)
@@ -524,3 +534,7 @@ cv::Mat3b ataseazaLegenda(cv::Mat rez, int width_legenda)
 	
 	return final;
 }	
+
+void generateHtmlFile(std::map<std::string, std::vector<int>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes) {
+	
+}
