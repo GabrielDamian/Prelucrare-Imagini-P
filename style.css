@@ -15,6 +15,7 @@ body{
 .body-containter
 {
     border: 1px solid red;
+	border-radius: 10px;
 	padding: 0;
 	position: relative;
 }
@@ -27,8 +28,8 @@ button{
 	position: absolute;
 	border: 1px solid black;
 	border-radius: 2px;
-	padding: 2px 4px;
-	
+	padding: 3px 10px;
+	width: 80px;
 }
 input{
 	position: absolute;

@@ -584,8 +584,35 @@ void generateHtmlFile(cv::Mat img, std::map<int, std::map<std::string, std::vect
 			cout << "alt buton" << endl;
 			int x_value = e[0];
 			int y_value = e[1];
+			int width_btn = e[2];
+			int height_btn = e[3];
 
-			string new_button = "<button style='top: " + to_string(y_value) + "px; left:" + to_string(x_value) + "px;'>Test button</button>\n";
+			cout << "coord_btn:" << x_value << " " << y_value << endl;
+
+			//treci prin toate cuvintele si vezi care se regasete la x + offset, y+offset
+			string btn_inner_text = "default";
+			for (auto a : text)
+			{
+				for (auto b : a.second)
+					{
+						
+						int x_text = b.second[0];
+						int y_text = b.second[1];
+						int width_cuvant = b.second[2];
+						int height_cuvant = b.second[3];
+
+						cout << endl << "Verificari cuvant:"<<endl;
+						cout << "x_text:" << x_text << " " << y_text << endl;
+						if (x_text > x_value-10 && x_text < x_value-10 + width_btn &&
+							y_text > y_value-10 && y_text < y_value-10 + height_btn)
+						{
+							btn_inner_text = b.first;
+						}
+					}
+			}
+
+
+			string new_button = "<button style='top:" + to_string(y_value) + "px; left:" + to_string(x_value) + "px;'>" + btn_inner_text +"</button>\n";
 			html += new_button;
 		}
 
