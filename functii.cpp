@@ -316,13 +316,13 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetwee
 	return matrix;
 }
 
-std::map<std::string, std::vector<int>> characterDetector(cv::Mat original) {
+std::map<int, std::map<std::string,std::vector<int>>> characterDetector(cv::Mat original) {
 	cv::Mat img = original.clone();
 	cv::Mat imgGray = RGB2GRAY(img);
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 
-	std::map<std::string, vector<int>> text;
+	std::map<int, std::map<std::string, std::vector<int>>> text;
 	std::vector<std::vector<int>> words = generateBoxesForText(imgGray);
 
 	for (int wordIndex = 0; wordIndex < words.size(); ++wordIndex) {
@@ -338,7 +338,13 @@ std::map<std::string, std::vector<int>> characterDetector(cv::Mat original) {
 		wordImage = cv::imread(concat);
 
 		std::string wordString = calculateCharacterValues(wordImage.clone());
-		text.insert(std::make_pair(wordString, vector<int>{ x, y, w, h }));
+		text.insert(
+			std::make_pair(
+				wordIndex,
+				std::map<std::string, std::vector<int>>{
+														std::make_pair(wordString, vector<int>{ x, y, w, h })}
+			)
+		);
 	}
 	return text;
 }
@@ -535,6 +541,23 @@ cv::Mat3b ataseazaLegenda(cv::Mat rez, int width_legenda)
 	return final;
 }	
 
-void generateHtmlFile(std::map<std::string, std::vector<int>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes) {
-	
+void generateHtmlFile(std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes) {
+	/*
+	for (auto e : text) {
+		cout << e.first << ": ";
+		for (auto d : e.second) {
+			cout << d.first << ": ";
+			for (auto c : d.second) {
+				cout << c << " ";
+			}
+		}
+		cout << endl;
+	}*/
+
+	for (auto a : btns) {
+		for (auto b : a) {
+			cout << b << " ";
+		}
+		cout << endl;
+	}
 }

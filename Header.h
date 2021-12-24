@@ -35,6 +35,7 @@ struct Character {
 template<typename T>
 void printArray(std::vector<T> array, int size);
 void printMatrix(std::vector<std::vector<int>> mat, int height, int width);
+
 std::string calculateCharacterValues(cv::Mat wordImage);
 std::vector<int> calculareFrecventa(cv::Mat img);
 int similarityIndex(std::vector<int> sectionValues1, std::vector<int> sectionValues2);
@@ -56,9 +57,9 @@ void drawReactagles(cv::Mat img, std::vector<std::vector<int>> rectangles, int n
 cv::Mat RGB2GRAY(cv::Mat input);
 void textDetector(cv::Mat original, cv::Mat output);
 std::list<std::vector<int>> btnDetector(cv::Mat original, cv::Mat output);
-std::map<std::string, std::vector<int>> characterDetector(cv::Mat original);
+std::map<int, std::map<std::string, std::vector<int>>> characterDetector(cv::Mat original);
 std::list<std::vector<int>> checkboxDetector(cv::Mat original, cv::Mat output);
-void generateHtmlFile(std::map<std::string, std::vector<int>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes);
+void generateHtmlFile(std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes);
 
 cv::Mat generateLegendCustom(int w, int h);
 cv::Mat3b ataseazaLegenda(cv::Mat img_rez, int width_legenda);
