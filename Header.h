@@ -19,7 +19,7 @@
 #define COLS 21
 #define ROWSRESIZE 12
 #define COLSRESIZE 21
-#define NROFCHARACTERS 63
+#define NROFCHARACTERS 62
 
 struct Character {
 	char ch;
@@ -58,9 +58,9 @@ void drawReactagles(cv::Mat img, std::vector<std::vector<int>> rectangles, int n
 cv::Mat RGB2GRAY(cv::Mat input);
 void textDetector(cv::Mat original, cv::Mat output);
 std::list<std::vector<int>> btnDetector(cv::Mat original, cv::Mat output);
-std::map<int, std::map<std::string, std::vector<int>>> characterDetector(cv::Mat original);
+std::map<int, std::pair<std::string, std::vector<int>>> characterDetector(cv::Mat original);
 std::list<std::vector<int>> checkboxDetector(cv::Mat original, cv::Mat output);
-void generateHtmlFile(cv::Mat img, std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes);
+void generateHtmlFile(cv::Mat img, std::map<int, std::pair<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes);
 
 cv::Mat generateLegendCustom(int w, int h);
 cv::Mat3b ataseazaLegenda(cv::Mat img_rez, int width_legenda);

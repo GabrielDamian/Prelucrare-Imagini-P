@@ -26,9 +26,9 @@ void printMatrix(std::vector<std::vector<int>> mat, int height, int width) {
 	{
 		for (int j = 0; j < width; ++j)
 		{
-			cout << mat[i][j] << " ";
+			std::cout << mat[i][j] << " ";
 		}
-		cout << endl;
+		std::cout << endl;
 	}
 }
 
@@ -316,13 +316,13 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetwee
 	return matrix;
 }
 
-std::map<int, std::map<std::string,std::vector<int>>> characterDetector(cv::Mat original) {
+std::map<int, std::pair<std::string,std::vector<int>>> characterDetector(cv::Mat original) {
 	cv::Mat img = original.clone();
 	cv::Mat imgGray = RGB2GRAY(img);
 
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 
-	std::map<int, std::map<std::string, std::vector<int>>> text;
+	std::map<int, std::pair<std::string, std::vector<int>>> text;
 	std::vector<std::vector<int>> words = generateBoxesForText(imgGray);
 
 	for (int wordIndex = 0; wordIndex < words.size(); ++wordIndex) {
@@ -341,8 +341,7 @@ std::map<int, std::map<std::string,std::vector<int>>> characterDetector(cv::Mat 
 		text.insert(
 			std::make_pair(
 				wordIndex,
-				std::map<std::string, std::vector<int>>{
-														std::make_pair(wordString, vector<int>{ x, y, w, h })}
+				std::make_pair(wordString, vector<int>{ x, y, w, h })
 			)
 		);
 	}
@@ -515,7 +514,7 @@ cv::Mat generateLegendCustom(int w, int h)
 {
 	cv::Mat img(w, h, CV_8UC3, cv::Scalar(255, 255,255));
 	if (img.empty()) {
-		cout << "Could not load image" << endl;
+		std::cout << "Could not load image" << endl;
 	}
 
 	cv::Rect r = cv::Rect(180,20,50,30);
@@ -541,100 +540,64 @@ cv::Mat3b ataseazaLegenda(cv::Mat rez, int width_legenda)
 	return final;
 }	
 
-void generateHtmlFile(cv::Mat img, std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes) {
+void generateHtmlFile(cv::Mat img, std::map<int, std::pair<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes) {
 	
 	string html = "<!DOCTYPE html>\n<html>\n<head>\n<link rel='stylesheet' href='style.css'>\n</head>\n<body>\n<div class='body-containter' style = 'width: ";
-		html += to_string(img.cols);
-		html += "px; height: ";
-		html += to_string(img.rows);
-		html += "px; '>\n";
-		cout << html << endl;
+	html += to_string(img.cols);
+	html += "px; height: ";
+	html += to_string(img.rows);
+	html += "px; '>\n";
 
-		//TEXT LOGIC
-		for (auto e : text) {
-			cout << endl << "Pentru fiecare cuvant:" << endl;
-			//cout << "e.first: " << e.first << endl;
-			for (auto d : e.second) {
-				//cout << "d.first: " << d.first << endl;
-				
-				string x_value = to_string(d.second[1]);
-				string y_value = to_string(d.second[0]);
-				string width_value = to_string(d.second[2]);
-				string height_value = to_string(d.second[3]);
-				//cout << "Values:" << x_value << " " << y_value << " " << width_value << " " << height_value;
+	//TEXT LOGIC
+	for (auto e : text) {	
+		string xValue = to_string(e.second.second[1]);
+		string yValue = to_string(e.second.second[0]);
+		string widthValue = to_string(e.second.second[2]);
+		string heightValue = to_string(e.second.second[3]);
 
-				string new_span = "<span style='top: " + x_value + "px; left:" + y_value + "px;'>" + d.first + "</span>";
-				cout << new_span;
-				html += new_span + "\n";
-				/*
-				for (auto c : d.second) {
-					cout << "d.second:" << endl;
-					cout << c << " ";
-				}
-				*/
-			}
-		}
+		string newSpan = "<span style='top: " + xValue + "px; left:" + yValue + "px;'>" + e.second.first + "</span>";
+		html += newSpan + "\n";
+	}
 
-		
+	//BTN LOGIC
+	for (auto e : btns)
+	{
+		int xValue = e[0];
+		int yValue = e[1];
+		int widthBtn = e[2];
+		int heightBtn = e[3];
 
-
-		//BTN LOGIC
-		for (auto e : btns)
+		//treci prin toate cuvintele si vezi care se regasete la x + offset, y+offset
+		string btnInnerText = "default";
+		for (auto a : text)
 		{
-			cout << "alt buton" << endl;
-			int x_value = e[0];
-			int y_value = e[1];
-			int width_btn = e[2];
-			int height_btn = e[3];
+			int xText = a.second.second[0];
+			int yText = a.second.second[1];
+			int widthCuvant = a.second.second[2];
+			int heightCuvant = a.second.second[3];
 
-			cout << "coord_btn:" << x_value << " " << y_value << endl;
-
-			//treci prin toate cuvintele si vezi care se regasete la x + offset, y+offset
-			string btn_inner_text = "default";
-			for (auto a : text)
+			if (xText > xValue-10 && xText < xValue-10 + widthBtn &&
+				yText > yValue-10 && yText < yValue-10 + heightBtn)
 			{
-				for (auto b : a.second)
-					{
-						
-						int x_text = b.second[0];
-						int y_text = b.second[1];
-						int width_cuvant = b.second[2];
-						int height_cuvant = b.second[3];
-
-						cout << endl << "Verificari cuvant:"<<endl;
-						cout << "x_text:" << x_text << " " << y_text << endl;
-						if (x_text > x_value-10 && x_text < x_value-10 + width_btn &&
-							y_text > y_value-10 && y_text < y_value-10 + height_btn)
-						{
-							btn_inner_text = b.first;
-						}
-					}
+				btnInnerText = a.second.first;
 			}
-
-
-			string new_button = "<button style='top:" + to_string(y_value) + "px; left:" + to_string(x_value) + "px;'>" + btn_inner_text +"</button>\n";
-			html += new_button;
 		}
+		string newButton = "<button style='top:" + to_string(yValue) + "px; left:" + to_string(xValue) + "px;'>" + btnInnerText +"</button>\n";
+		html += newButton;
+	}
 
-		//CHECKBOX LOGIC
+	//CHECKBOX LOGIC
+	for (auto e : checkBoxes)
+	{
+		int xValue = e[0];
+		int yValue = e[1];
 
-		for (auto e : checkBoxes)
-		{
-			cout << "alt checkbox" << endl;
-			int x_value = e[0];
-			int y_value = e[1];
+		string newCheckBox = "<input type='checkbox' style='top: " + to_string(yValue) + "px; left:" + to_string(xValue) + "px;' />\n";
+		html += newCheckBox;
+	}
+	html += "</div>\n</body>\n</html>\n";
 
-			string new_check_box = "<input type='checkbox' style='top: " + to_string(y_value) + "px; left:" + to_string(x_value) + "px;' />\n";
-			html += new_check_box;
-		}
-
-
-
-		html += "</div>\n</body>\n</html>\n";
-		cout << endl << "Final:" << endl;
-		cout << html;
-
-		ofstream MyFile("index.html");
-		MyFile << html;
-		MyFile.close();
+	ofstream myFile("index.html");
+	myFile << html;
+	myFile.close();
 }

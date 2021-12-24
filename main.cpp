@@ -1,7 +1,7 @@
 #include"Header.h"
 
 int main() {
-	cv::Mat img = cv::imread("Images/test1.png");
+	cv::Mat img = cv::imread("Images/test2.png");
 	cv::Mat rez = img.clone();
 	textDetector(img,rez);
 	auto btns = btnDetector(img,rez);
