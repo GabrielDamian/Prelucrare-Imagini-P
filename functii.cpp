@@ -541,23 +541,46 @@ cv::Mat3b ataseazaLegenda(cv::Mat rez, int width_legenda)
 	return final;
 }	
 
-void generateHtmlFile(std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes) {
-	/*
-	for (auto e : text) {
-		cout << e.first << ": ";
-		for (auto d : e.second) {
-			cout << d.first << ": ";
-			for (auto c : d.second) {
-				cout << c << " ";
+void generateHtmlFile(cv::Mat img, std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes) {
+	
+	string html = "<!DOCTYPE html>\n<html>\n<head>\n<link rel='stylesheet' href='style.css'>\n</head>\n<body>\n<div class='body-containter' style = 'width: ";
+		html += to_string(img.cols);
+		html += "px; height: ";
+		html += to_string(img.rows);
+		html += "px; '>\n";
+		cout << html << endl;
+
+
+		for (auto e : text) {
+			cout << endl << "Pentru fiecare cuvant:" << endl;
+			//cout << "e.first: " << e.first << endl;
+			for (auto d : e.second) {
+				//cout << "d.first: " << d.first << endl;
+				
+				string x_value = to_string(d.second[1]);
+				string y_value = to_string(d.second[0]);
+				string width_value = to_string(d.second[2]);
+				string height_value = to_string(d.second[3]);
+				//cout << "Values:" << x_value << " " << y_value << " " << width_value << " " << height_value;
+
+				string new_span = "<span style='top: " + x_value + "px; left:" + y_value + "px;'>" + d.first + "</span>";
+				cout << new_span;
+				html += new_span + "\n";
+				/*
+				for (auto c : d.second) {
+					cout << "d.second:" << endl;
+					cout << c << " ";
+				}
+				*/
 			}
 		}
-		cout << endl;
-	}*/
 
-	for (auto a : btns) {
-		for (auto b : a) {
-			cout << b << " ";
-		}
-		cout << endl;
-	}
+		html += "</div>\n</body>\n</html>\n";
+		cout << endl << "Final:" << endl;
+		cout << html;
+
+
+		ofstream MyFile("index.html");
+		MyFile << html;
+		MyFile.close();
 }

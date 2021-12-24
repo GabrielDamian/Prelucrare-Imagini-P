@@ -11,7 +11,7 @@ int main() {
 	
 	auto text = characterDetector(img);
 	
-	generateHtmlFile(text, btns, checkboxes);
+	generateHtmlFile(img, text, btns, checkboxes);
 
 	cv::waitKey(0);
 	cv::destroyAllWindows();

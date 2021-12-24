@@ -8,6 +8,7 @@
 #include <map>
 #include <utility>
 #include <list>
+#include <fstream>
 
 #include<opencv2/imgcodecs.hpp>
 #include<opencv2/highgui.hpp>
@@ -59,7 +60,7 @@ void textDetector(cv::Mat original, cv::Mat output);
 std::list<std::vector<int>> btnDetector(cv::Mat original, cv::Mat output);
 std::map<int, std::map<std::string, std::vector<int>>> characterDetector(cv::Mat original);
 std::list<std::vector<int>> checkboxDetector(cv::Mat original, cv::Mat output);
-void generateHtmlFile(std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes);
+void generateHtmlFile(cv::Mat img, std::map<int, std::map<std::string, std::vector<int>>> text, std::list<std::vector<int>> btns, std::list<std::vector<int>> checkBoxes);
 
 cv::Mat generateLegendCustom(int w, int h);
 cv::Mat3b ataseazaLegenda(cv::Mat img_rez, int width_legenda);
