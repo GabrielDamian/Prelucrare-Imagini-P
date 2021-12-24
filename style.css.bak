@@ -16,10 +16,17 @@ body{
 {
     border: 1px solid red;
 	padding: 0;
-	position: absolute;
+	position: relative;
 }
 span{
-    position: relative;
+    position: absolute;
 	border: 1px solid blue;
 	font-size: 15px;
+}
+button{
+	position: absolute;
+	border: 1px solid black;
+	border-radius: 2px;
+	padding: 2px 4px;
+	
 }

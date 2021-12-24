@@ -550,7 +550,7 @@ void generateHtmlFile(cv::Mat img, std::map<int, std::map<std::string, std::vect
 		html += "px; '>\n";
 		cout << html << endl;
 
-
+		//TEXT LOGIC
 		for (auto e : text) {
 			cout << endl << "Pentru fiecare cuvant:" << endl;
 			//cout << "e.first: " << e.first << endl;
@@ -575,10 +575,37 @@ void generateHtmlFile(cv::Mat img, std::map<int, std::map<std::string, std::vect
 			}
 		}
 
+		
+
+
+		//BTN LOGIC
+		for (auto e : btns)
+		{
+			cout << "alt buton" << endl;
+			int x_value = e[0];
+			int y_value = e[1];
+
+			string new_button = "<button style='top: " + to_string(y_value) + "px; left:" + to_string(x_value) + "px;'>Test button</button>\n";
+			html += new_button;
+		}
+
+		//CHECKBOX LOGIC
+
+		for (auto e : checkBoxes)
+		{
+			cout << "alt checkbox" << endl;
+			int x_value = e[0];
+			int y_value = e[1];
+
+			string new_check_box = "<input type='checkbox' style='top: " + to_string(y_value) + "px; left:" + to_string(x_value) + "px;' />\n";
+			html += new_check_box;
+		}
+
+
+
 		html += "</div>\n</body>\n</html>\n";
 		cout << endl << "Final:" << endl;
 		cout << html;
-
 
 		ofstream MyFile("index.html");
 		MyFile << html;

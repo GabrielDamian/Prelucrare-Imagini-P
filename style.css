@@ -23,3 +23,13 @@ span{
 	border: 1px solid blue;
 	font-size: 15px;
 }
+button{
+	position: absolute;
+	border: 1px solid black;
+	border-radius: 2px;
+	padding: 2px 4px;
+	
+}
+input{
+	position: absolute;
+}
