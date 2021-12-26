@@ -298,7 +298,7 @@ std::vector<std::vector<int>> generateBoxesForText(cv::Mat img, int pixelsBetwee
 
 		std::vector<int> frecvBorder = blackPixelsOnEachColumnWithBorderedRows(img, y0, y1, width);
 		std::vector<std::vector<int>> intervale_width = widthCoordsOfEachTextFoundOnRows(frecvBorder, width, pixelsBetweenBoxes);
-		nrOfRectangles += intervale_width.size();
+		nrOfRectangles += (int)intervale_width.size();
 
 		for (int j = 0; j < intervale_width.size(); ++j)
 		{
@@ -332,10 +332,10 @@ std::map<int, std::pair<std::string,std::vector<int>>> characterDetector(cv::Mat
 		int w = words[wordIndex][3]+2;
 		int h = words[wordIndex][2]+2;
 
-		cv::Mat wordImage = img(cv::Rect(x, y, w, h));
-		string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
-		imwrite(concat, wordImage);
-		wordImage = cv::imread(concat);
+		cv::Mat wordImage = img(cv::Rect(x, y, w, h)).clone();
+		//string concat = "Cropped/" + to_string(wordIndex) + ".jpg"; // sa il faci "Cropped/aux.jpg" in stadiu final
+		//imwrite(concat, wordImage);
+		//wordImage = cv::imread(concat);
 
 		std::string wordString = calculateCharacterValues(wordImage.clone());
 		text.insert(
@@ -367,11 +367,10 @@ std::string calculateCharacterValues(cv::Mat wordImage) {
 		cv::Mat imgCharacter = imgGray(cv::Rect(xCharacter, yCharacter, wCharacter, hCharacter)).clone();
 		imgCharacter = eliminatePadding(imgCharacter);
 		cv::Mat imgResizedCharacter = resizeTo(imgCharacter, ROWSRESIZE, COLSRESIZE);
-		cv::GaussianBlur(imgResizedCharacter, imgResizedCharacter, cv::Size(3, 3), 0);
 		threshold(imgResizedCharacter, imgResizedCharacter, 0, 255, cv::THRESH_OTSU);
 
-		int wRegion = ceil((double)imgResizedCharacter.cols / COLS);
-		int hRegion = ceil((double)imgResizedCharacter.rows / ROWS);
+		int wRegion = (int)ceil((double)imgResizedCharacter.cols / COLS);
+		int hRegion = (int)ceil((double)imgResizedCharacter.rows / ROWS);
 
 		std::vector<int> sectionValues(ROWS * COLS, 0 );
 		
@@ -401,7 +400,7 @@ void textDetector(cv::Mat original, cv::Mat output) {
 	aplicareThreshold(imgGray, automaticThreshold(imgGray));
 
 	std::vector<std::vector<int>> rectangles_ = generateBoxesForText(imgGray);
-	drawReactagles(output, rectangles_, rectangles_.size());
+	drawReactagles(output, rectangles_, (int)rectangles_.size());
 }
 
 std::list<std::vector<int>> btnDetector(cv::Mat original, cv::Mat output) {
@@ -498,8 +497,8 @@ std::list<std::vector<int>> checkboxDetector(cv::Mat original, cv::Mat output) {
 		int inclinareaDreptei = abs(ds.x - dj.y);
 		int inclinareaSus = abs(ss.y - ds.y);
 		int inclinareaJos = abs(sj.y - dj.y);
-		int trasholdVertical = lungimeDreapta * 0.09;
-		int trasholdOrizontal = lungimeSus * 0.09;
+		int trasholdVertical = (int)((double)lungimeDreapta * 0.09);
+		int trasholdOrizontal = (int)((double)lungimeSus * 0.09);
 		if (inclinareaDreptei > trasholdVertical || inclinareaStangii > trasholdVertical)//verificare inclinare pe parti
 			if (inclinareaSus > trasholdOrizontal || inclinareaJos > trasholdOrizontal)//verificare inclinare sus si jos
 				continue;
