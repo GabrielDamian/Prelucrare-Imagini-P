@@ -524,6 +524,10 @@ cv::Mat generateLegendCustom(int w, int h)
 	rectangle(img, r_2, cv::Scalar(66, 245, 66), 2);
 	putText(img, "Buton", cv::Point(50, 105), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 0), 1, false);
 
+	cv::Rect r_3 = cv::Rect(180, 140, 50, 30);
+	rectangle(img, r_3, cv::Scalar(0, 0, 0), 2);
+	putText(img, "Checkbox", cv::Point(50, 160), cv::FONT_HERSHEY_DUPLEX, 0.7, cv::Scalar(0, 0, 0), 1, false);
+
 	return img;
 }
 
